@@ -1806,12 +1806,14 @@ function syncCauldronToMainDB(notify = false) {
 
 let _cauldronModalState = {
     targetItem: null,
+    pathKey: '',
     cauldronType: 0,    // 0=普通(3格), 1=高級(2格)
     slots: [null, null, null],
 };
 
-function openCauldronRecipeModal(targetItem) {
+function openCauldronRecipeModal(targetItem, pathKey = '') {
     _cauldronModalState.targetItem = targetItem;
+    _cauldronModalState.pathKey = pathKey;
     _cauldronModalState.cauldronType = 0;
     _cauldronModalState.slots = [null, null, null];
 
@@ -2101,7 +2103,7 @@ function _toggleCauldronModalFav() {
 }
 
 function _applyCauldronModalRecipe() {
-    const { targetItem, cauldronType, slots } = _cauldronModalState;
+    const { targetItem, pathKey, cauldronType, slots } = _cauldronModalState;
     const slotCount = cauldronType === 1 ? 2 : 3;
     const inputs = slots.slice(0, slotCount).filter(Boolean).sort();
     if (inputs.length < slotCount) return;
@@ -2118,13 +2120,15 @@ function _applyCauldronModalRecipe() {
     // 2. 同步到主 DB 並套用對應 recipe
     syncCauldronToMainDB();
 
-    const matchedRecipe = (DB.recipes || []).find(r => {
-        if (!r.id?.startsWith('AUTO_GENERATED_CAULDRON')) return false;
-        if (!r.outputs?.[targetItem]) return false;
-        return Object.keys(r.inputs).sort().join(',') === [...inputs].sort().join(',');
-    });
+    const expectedRecipeId = 'AUTO_GENERATED_CAULDRON' + inputs
+        .map(name => `_${DB.items[name]?.id ?? 0}`)
+        .join('');
+    const matchedRecipe = (DB.recipes || []).find(r =>
+        r.id === expectedRecipeId && !!r.outputs?.[targetItem]
+    );
     if (matchedRecipe) {
-        DB.settings.preferredRecipes[targetItem] = matchedRecipe.id;
+        if (pathKey) DB.settings.nodeRecipeOverrides[pathKey] = matchedRecipe.id;
+        else DB.settings.preferredRecipes[targetItem] = matchedRecipe.id;
         persist();
     }
 

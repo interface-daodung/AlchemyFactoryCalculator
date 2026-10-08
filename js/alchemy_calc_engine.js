@@ -39,6 +39,7 @@
 (function (global) {
     const YIELD_MULTIPLIER_MACHINES = ["Extractor", "Thermal Extractor", "Alembic", "Advanced Alembic"];
     const CATALYST_CHARGES_MAP = { 180: 'unstable', 240: 'fertile', 1500: 'resonant', 99999: 'eternal' };
+    const RELIC_ALTAR_SECONDS = { 502: 60, 619: 90, 620: 120, 710: 150, 814: 224, 914: 300, 1001: 600 };
 
     function getCatalystTypeByCharges(charges) {
         return CATALYST_CHARGES_MAP[charges] || null;
@@ -187,7 +188,8 @@
     function computeDecomposeTime(db, itemName) {
         const itemDef = db.items[itemName];
         if (!itemDef || !itemDef.baseCost) return null;
-        return Math.pow(itemDef.baseCost, 0.518) * 0.1676;
+        if (RELIC_ALTAR_SECONDS[itemDef.id]) return RELIC_ALTAR_SECONDS[itemDef.id];
+        return Math.pow(itemDef.baseCost, 0.52) * 0.1655;
     }
     
     function computeDecomposeExp(db, itemName) {

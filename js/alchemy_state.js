@@ -9,6 +9,8 @@ const I18N_DATA_KEY = "alchemy_i18n_source_v1";
 const I18N_BACKUP_KEY = "alchemy_i18n_source_backup_v1";
 const SETTINGS_KEY = "alchemy_settings_v1";
 const SETTINGS_BACKUP_KEY = "alchemy_settings_backup_v1";
+const RECENT_PRODUCTION_PLANS_KEY = "alchemy_recent_production_plans_v1";
+const MAX_RECENT_PRODUCTION_PLANS = 5;
 
 /* ==========================================================================
    SECTION: DB.settings FIELD REFERENCE
@@ -52,6 +54,7 @@ const DEFAULT_SETTINGS = {
     lvlAlchemy: 0,
     lvlFuel: 0,
     lvlFert: 0,
+    lvlKnowledge: 0,
     lvlSell: 0,
     lvlContract: 0,
     contractWorkMinutes: 16,
@@ -83,74 +86,15 @@ const DEFAULT_SETTINGS = {
     customCosts: {},
     expandCatalystInputs: { unstable: false, fertile: false, resonant: false, eternal: false },
     thermalExtractorHeight: 255,
+    knowledgeTargetExp: 1000,
+    knowledgeCurrentLevel: 0,
+    knowledgeProgressExp: 0,
+    knowledgeTargetLevel: 10,
 };
-
-/* ==========================================================================
-   SECTION: EDITOR & DATA MANAGEMENT
-   ========================================================================== */
 
 /** State API - store DB.settings to localStorage */
 function persist() { 
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(DB.settings));
-}
-
-function loadEditorContent() {
-    const target = document.getElementById('editor-target').value;
-    const editor = document.getElementById('json-editor');
-
-    switch (target) {
-        case 'db': editor.value = localStorage.getItem(SOURCE_KEY) ?? JSON.stringify(DB, null, 2); break;
-        case 'db_backup': editor.value = localStorage.getItem(BACKUP_KEY) ?? ""; break;
-        case 'i18n': editor.value = JSON.stringify(window.ALCHEMY_I18N, null, 2); break;
-        case 'i18n_backup': editor.value = localStorage.getItem(I18N_BACKUP_KEY) ?? ""; break;
-        case 'settings': editor.value = JSON.stringify(DB.settings, null, 2); break;
-        case 'settings_backup': editor.value = localStorage.getItem(SETTINGS_BACKUP_KEY) ?? ""; break;
-    }
-}
-
-function applyChanges() {
-    const txt = document.getElementById('json-editor').value;
-    const target = document.getElementById('editor-target').value;
-    try {
-        const jsonMatch = txt.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("Format error: No valid JSON found (missing { ... })");
-        
-        let jsonString = jsonMatch[0];
-        jsonString = jsonString.replace(/\/\/.*$/gm, '');
-        const parsedData = JSON.parse(jsonString); // Avoid using eval()
-
-        switch (target) {
-            case 'db': 
-            case 'db_backup': 
-                window.ALCHEMY_DB = parsedData;
-                DB = window.ALCHEMY_DB;
-                if (localStorage.getItem(SOURCE_KEY)) localStorage.setItem(BACKUP_KEY, localStorage.getItem(SOURCE_KEY));
-                localStorage.setItem(SOURCE_KEY, txt);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
-                init();
-            case 'i18n':
-            case 'i18n_backup':                
-                translateDatabase(DB, false); // Revert DB item key back the the original key
-                window.ALCHEMY_I18N = parsedData;
-                if (localStorage.getItem(I18N_DATA_KEY)) localStorage.setItem(I18N_BACKUP_KEY, localStorage.getItem(I18N_DATA_KEY));
-                localStorage.setItem(I18N_DATA_KEY, JSON.stringify(window.ALCHEMY_I18N));
-                location.reload();
-            case 'settings':
-            case 'settings_backup':
-                DB.settings = parsedData;
-                if (localStorage.getItem(SETTINGS_KEY)) localStorage.setItem(SETTINGS_BACKUP_KEY, localStorage.getItem(SETTINGS_KEY));
-                localStorage.setItem(SETTINGS_KEY, JSON.stringify(DB.settings));
-                init();
-        } 
-        alert("Applied " + target + " safely!");
-    } catch(e) {
-        alert("JSON Parsing Error: " + e.message + "\n\nNote: Please ensure the data uses double quotes and no trailing commas.");
-    }
-}
-
-function exportData() {
-    const txt = document.getElementById('json-editor').value; const blob = new Blob([txt], { type: "text/javascript" });
-    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = "alchemy_db.js"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 /* ==========================================================================

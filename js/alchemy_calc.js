@@ -26,6 +26,74 @@ const GLOBAL_CALC_STATE = {
 let _lastCalcResult = null;
 let _lastCalcParams = null;
 
+function escapeProductionHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function getProductionRecipeLabel(recipe) {
+    const machine = t(recipe.machine, 'machines');
+    const inputs = Object.entries(recipe.inputs || {})
+        .map(([item, qty]) => `${Number(Number(qty).toFixed(3))}× ${item}`)
+        .join(' + ');
+    return inputs ? `${machine} — ${inputs}` : machine;
+}
+
+function renderProductionRecipeSelect(item, pathKey, activeRecipe) {
+    const candidates = getRecipesFor(item);
+    const itemDef = DB.items[item] || {};
+    const showPicker = candidates.length > 1 || itemDef.cauldronTarget !== undefined;
+    if (!showPicker) return '';
+
+    const options = candidates.map(recipe => {
+        const selected = recipe.id === activeRecipe?.id ? ' selected' : '';
+        return `<option value="${escapeProductionHtml(recipe.id)}"${selected}>${escapeProductionHtml(getProductionRecipeLabel(recipe))}</option>`;
+    });
+    if (!activeRecipe) {
+        options.unshift(`<option value="" selected disabled>${escapeProductionHtml(t('No Recipe', 'ui'))}</option>`);
+    }
+    if (DB.settings.nodeRecipeOverrides?.[pathKey]) {
+        options.unshift(`<option value="__default__">↩ ${escapeProductionHtml(t('Use Global Recipe', 'ui'))}</option>`);
+    }
+    if (itemDef.cauldronTarget !== undefined) {
+        options.push(`<option value="__add_cauldron__">＋ ${escapeProductionHtml(t('Add Cauldron Recipe', 'ui'))}</option>`);
+    }
+
+    return `<select class="production-recipe-select"
+        data-item="${encodeURIComponent(item)}" data-path="${encodeURIComponent(pathKey)}"
+        data-current="${escapeProductionHtml(activeRecipe?.id || '')}"
+        title="${escapeProductionHtml(t('Select Recipe for ') + item)}"
+        aria-label="${escapeProductionHtml(t('Select Recipe for ') + item)}"
+        onchange="onProductionRecipeChange(this)">${options.join('')}</select>`;
+}
+
+function onProductionRecipeChange(select) {
+    const item = decodeURIComponent(select.dataset.item || '');
+    const pathKey = decodeURIComponent(select.dataset.path || '');
+    const recipeId = select.value;
+
+    if (recipeId === '__add_cauldron__') {
+        select.value = select.dataset.current || '';
+        openCauldronRecipeModal(item, pathKey);
+        return;
+    }
+    if (recipeId === '__default__') delete DB.settings.nodeRecipeOverrides[pathKey];
+    else DB.settings.nodeRecipeOverrides[pathKey] = recipeId;
+    persist();
+    calculate();
+}
+
+function openProductionRecipeSettings(button) {
+    openRecipeModal(
+        decodeURIComponent(button.dataset.item || ''),
+        decodeURIComponent(button.dataset.path || '')
+    );
+}
+
 /* ==========================================================================
    SECTION: HELPER MATH FUNCTIONS
    ========================================================================== */
@@ -215,16 +283,6 @@ function calculate() {
     } catch(e) { console.error(e); }
 }
 
-function sendCalcResultToPlanner() {
-    if (!_lastCalcResult) return;
-    if (typeof plannerImportFromCalcResult !== 'function') {
-        console.error("alchemy_planner.js not loaded");
-        return;
-    }
-    switchTab('planner');
-    plannerImportFromCalcResult(_lastCalcResult, _lastCalcParams);
-}
-
 /**
  * 計算指定物品在單一機台滿載下的產出速率 (items/min)，
  * 已套用 Alchemy/Speed 倍率並被傳送帶速度上限裁切
@@ -367,6 +425,8 @@ function updateLabels(params) {
         document.getElementById('lvlAlchemy-title').innerText = `${t('Alchemy Skill')} (${(params.alchemyMult*100).toFixed(0)}%)`;
         document.getElementById('lvlFuel-title').innerText = `${t('Fuel Efficiency')} (${(params.fuelMult*100).toFixed(0)}%)`;
         document.getElementById('lvlFert-title').innerText = `${t('Fert Efficiency')} (${(params.fertMult*100).toFixed(0)}%)`;
+        const knowledgeLevel = parseInt(document.getElementById('lvlKnowledge').value) || 0;
+        document.getElementById('lvlKnowledge-title').innerText = `${t('Relic Knowledge')} (${(100 + knowledgeLevel * 10).toFixed(0)}%)`;
         document.getElementById('lvlSell-title').innerText = `${t('Retail Price')} (${((params.sellMult) * 100).toFixed(0)}%)`;
         document.getElementById('lvlContract-title').innerText = `${t('Wholesale Price')} (${((params.wholesaleMult) * 100).toFixed(0)}%)`;
     } catch(e) { console.error(e); }
@@ -401,6 +461,10 @@ function renderCalculationResult(params, result) {
     renderExternalInputsSection(treeContainer, params, result.externalInputs);
     renderByproductsSection(treeContainer, params, result.byproducts);
     renderCommonNodesSection(treeContainer, params, result.commonNodes);
+
+    if (typeof syncProductionGraphFromCalculation === 'function') {
+        syncProductionGraphFromCalculation(result, params);
+    }
 
     updateConstructionList(
         result.construction.maxCounts,
@@ -486,7 +550,8 @@ function renderTreeNode(params, node) {
     if (node.tags.detailsType === 'raw') detailsTag = `<span class="details">(${t('Raw')})</span>`;
 
     let machineTag = '';
-    let swapBtn = '';
+    let recipeSelect = renderProductionRecipeSelect(node.item, node.pathKey, node.recipe);
+    let recipeConfigBtn = '';
     if (node.machine) {
         const tooltipText = buildRecipeTooltip(node.recipeTooltipData);
         let capTag = '';
@@ -497,11 +562,10 @@ function renderTreeNode(params, node) {
         const machineIcon = node.tags.heat ? '🔥' : (node.tags.bio ? '🌱' : '');
         const machineNumber = params.showRawMachineCount ? Number(node.machineCount.toFixed(2)) : Math.ceil(node.machineCount - 0.0001);
         machineTag = `<span class="machine-tag" data-tooltip="${tooltipText}">${machineNumber} ${t(node.machine, 'machines')}${capTag} ${machineIcon}</span>`;
-        const recipeCandidates = getRecipesFor(node.item);
-        const hasCauldronTarget = itemDef && itemDef.cauldronTarget !== undefined;
-        const hasRecipeModifier = recipeCandidates?.length === 1 && recipeCandidates[0].machine === 'Advanced Athanor';
-        if (recipeCandidates.length > 1 || hasCauldronTarget || hasRecipeModifier) {
-            swapBtn = `<button class="swap-btn" onclick="openRecipeModal('${node.item}', '${node.pathKey}')" title="${t('Swap Recipe')}">🔄</button>`;
+        if (['Advanced Athanor', 'Thermal Extractor', 'Paradox Crucible'].includes(node.recipe?.machine)) {
+            recipeConfigBtn = `<button class="swap-btn"
+                data-item="${encodeURIComponent(node.item)}" data-path="${encodeURIComponent(node.pathKey)}"
+                onclick="openProductionRecipeSettings(this)" title="${escapeProductionHtml(t('Recipe Settings', 'ui'))}">⚙</button>`;
         }
     }
 
@@ -548,7 +612,8 @@ function renderTreeNode(params, node) {
         ${rateHtml}
         ${beltCountTag}
         ${itemTag}
-        ${swapBtn}
+        ${recipeSelect}
+        ${recipeConfigBtn}
         ${detailsTag}
         ${machineTag}
         ${byproductTag}
@@ -1088,6 +1153,12 @@ function updateSummaryBox(
     }
 
     const targetItemDef = DB.items[targetItem] || {};
+    const knowledgeExpFor = itemDef => {
+        if (typeof getKnowledgeExp === 'function') return getKnowledgeExp(itemDef) || 0;
+        if (Number.isFinite(itemDef?.exp)) return itemDef.exp;
+        return Number.isFinite(itemDef?.baseCost) && !itemDef?.liquid ? itemDef.baseCost * 0.0002 : 0;
+    };
+    const targetKnowledgeExp = knowledgeExpFor(targetItemDef);
 
     let usedRate = 0;
     if (targetItem === selectedFuel) usedRate += actualFuelNeed;
@@ -1216,10 +1287,10 @@ function updateSummaryBox(
             `;
         }
 
-        if (targetItemDef.exp) {
+        if (targetKnowledgeExp > 0) {
             outputHtml += `
                 <span class="stat-value net-positive">
-                    ${formatVal(targetRate * targetItemDef.exp)} ${t('Exp')} / min
+                    ${formatVal(targetRate * targetKnowledgeExp)} ${t('Exp')} / min
                 </span>
             `;
         }
@@ -1234,6 +1305,10 @@ function updateSummaryBox(
                 </span>
             `;
         });
+        const totalKnowledgeExp = p.targets.reduce((sum, { item, rate }) => sum + rate * knowledgeExpFor(DB.items[item]), 0);
+        if (totalKnowledgeExp > 0) {
+            outputHtml += `<span class="stat-value net-positive">${formatVal(totalKnowledgeExp)} ${t('Exp')} / min</span>`;
+        }
     }
 
     outputHtml += `</div>`;
@@ -1525,11 +1600,11 @@ function updateSummaryBox(
         `;
     }
 
-    if (targetItemDef.exp) {
+    if (targetKnowledgeExp > 0) {
         valueHtml += `
             <span class="stat-value gold-profit">
                 ${t('Cost Per Exp   ')}:
-                ${Math.ceil(convertedCost / targetItemDef.exp).toLocaleString()}
+                ${Math.ceil(convertedCost / targetKnowledgeExp).toLocaleString()}
             </span>
         `;
     }

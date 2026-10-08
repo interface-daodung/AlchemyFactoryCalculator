@@ -396,8 +396,9 @@ function renderPlannerNodeModalBody(nodeId) {
     body.dataset.nodeId = nodeId;
 
     const rawRecipe = plannerGetRawRecipe(node.recipeId);
-    const mainOut = rawRecipe ? Object.keys(rawRecipe.outputs)[0] : null;
+    const mainOut = node.sourceItem || (rawRecipe ? Object.keys(rawRecipe.outputs)[0] : null);
     const flows = _plannerLastFlows || plannerResolveFlows();
+    const isIntegratedProductionNode = !!node.sourcePathKeys?.length;
 
     const titleEl = document.getElementById('planner-node-modal-title');
     if (titleEl) {
@@ -430,9 +431,7 @@ function renderPlannerNodeModalBody(nodeId) {
     ` : ``;
 
 
-    body.innerHTML = `        
-        ${recipeSectionHtml}
-        ${moduleSectionHtml}
+    const graphToolsHtml = isIntegratedProductionNode ? '' : `
         ${_buildPlannerNodeMismatchSectionHtml(node, flows)}
         <div style="height:1px; background:var(--border); margin:12px 0;"></div>
         <div class="planner-node-actions-section" style="display:flex; flex-direction:column; gap:6px;">
@@ -451,7 +450,12 @@ function renderPlannerNodeModalBody(nodeId) {
             <button class="split-btn" style="width:100%;" onclick="removeAllUpsteamNodes('${node.id}')">
                 × ${t('Clear All Upstream', 'ui')}
             </button>
-        </div>
+        </div>`;
+
+    body.innerHTML = `
+        ${recipeSectionHtml}
+        ${moduleSectionHtml}
+        ${graphToolsHtml}
     `;
 }
 
@@ -578,8 +582,20 @@ function _buildPlannerNodeRecipeSwitchHtml(node, mainOut) {
 /** 重新整理 modal 內容 + 節點卡片/連線/摘要面板，並存檔 */
 function _plannerNodeModalRefresh(nodeId) {    
     recomputeAndRefreshPlanner();
-    renderPlannerNodeModalBody(nodeId);
     savePlannerState();
+    const node = plannerState.nodes[nodeId];
+    if (node?.sourcePathKeys?.length) {
+        if (node.recipeModifiers && Object.keys(node.recipeModifiers).length > 0) {
+            DB.settings.recipeModifiers[node.recipeId] = JSON.parse(JSON.stringify(node.recipeModifiers));
+        } else {
+            delete DB.settings.recipeModifiers[node.recipeId];
+        }
+        persist();
+        closeModal('planner-node-modal');
+        calculate();
+        return;
+    }
+    renderPlannerNodeModalBody(nodeId);
 }
 
 function plannerToggleCatalyst(nodeId, catalystId) {
@@ -641,6 +657,17 @@ function onPlannerThermalHeightChange(val) {
 function plannerSwitchNodeRecipe(nodeId, recipeId) {
     const node = plannerState.nodes[nodeId];
     if (!node || node.recipeId === recipeId) return;
+
+    if (node.sourcePathKeys?.length) {
+        node.sourcePathKeys.forEach(pathKey => {
+            DB.settings.nodeRecipeOverrides[pathKey] = recipeId;
+        });
+        persist();
+        closeModal('planner-node-modal');
+        calculate();
+        return;
+    }
+
     node.recipeId = recipeId;
     delete node.recipeModifiers;
     renderPlannerNodeModalBody(nodeId);

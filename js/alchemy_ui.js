@@ -309,7 +309,7 @@ function toggleCalcMode() {
     calculate();
 }
 
-function addMultiTargetRow(itemName, rate = 0) {
+function addMultiTargetRow(itemName, rate = null) {
     const container = document.getElementById('multi-target-list');
     const itemDef = DB.items[itemName] || { id: 0 };
     if (!itemName) itemName = t('Target Item');
@@ -318,7 +318,7 @@ function addMultiTargetRow(itemName, rate = 0) {
     row.className = 'multi-target-row';
     row.dataset.item = itemName;
 
-    if (rate === 0) {
+    if (rate === null) {
         const lvlBelt = parseInt(document.getElementById('lvlBelt').value) || 0;
         rate = getBeltSpeed(lvlBelt);
     }
@@ -532,10 +532,287 @@ function saveCalcUISettings() {
     DB.settings.machineModeToggle = document.getElementById('machineModeToggle').checked;
     DB.settings.selfFuel = document.getElementById('btnSelfFuel')?.classList.contains('btn-active-green') ?? false;
     DB.settings.selfFert = document.getElementById('btnSelfFert')?.classList.contains('btn-active-green') ?? false;
+    const currentPlanUpgrades = {};
+    ['lvlBelt','lvlSpeed','lvlAlchemy','lvlFuel','lvlFert','lvlKnowledge','lvlSell','lvlContract'].forEach(key => {
+        const value = parseInt(document.getElementById(key).value) || 0;
+        DB.settings[key] = value;
+        currentPlanUpgrades[key] = value;
+    });
+    if (typeof plannerState !== 'undefined' && plannerState) {
+        plannerState.upgrades = currentPlanUpgrades;
+    }
     persist();
 }
 
-function saveSettings(e) { ['lvlBelt','lvlSpeed','lvlAlchemy','lvlFuel','lvlFert', 'lvlSell', 'lvlContract'].forEach(k => { DB.settings[k] = parseInt(document.getElementById(k).value) || 0; }); persist(); }
+function saveSettings() {
+    const upgradeKeys = ['lvlBelt','lvlSpeed','lvlAlchemy','lvlFuel','lvlFert','lvlKnowledge', 'lvlSell', 'lvlContract'];
+    const currentPlanUpgrades = {};
+    upgradeKeys.forEach(key => {
+        const value = parseInt(document.getElementById(key).value) || 0;
+        DB.settings[key] = value;
+        currentPlanUpgrades[key] = value;
+    });
+    if (typeof plannerState !== 'undefined' && plannerState) {
+        plannerState.upgrades = currentPlanUpgrades;
+    }
+    persist();
+    if (document.getElementById('view-knowledge')?.classList.contains('active') && typeof renderKnowledgePage === 'function') {
+        renderKnowledgePage();
+    }
+}
+
+function captureProductionPlanPayload() {
+    saveCalcUISettings();
+
+    // Capture logistics controls even if they have not blurred/changed yet.
+    DB.settings.defaultFuel = document.getElementById('fuelSelect').value;
+    DB.settings.defaultFert = document.getElementById('fertSelect').value;
+    DB.settings.selectedHeatingDevice = document.getElementById('heatingDeviceSelect').value;
+    DB.settings.nodeSize = document.getElementById('nodeScaleSlider').value;
+    DB.settings.showBeltCount = document.getElementById('showBeltCount').checked;
+    DB.settings.showFuelFert = document.getElementById('showFuelFert').checked;
+    DB.settings.showRawMachineCount = document.getElementById('showRawMachineCount').checked;
+    DB.settings.showMaxCap = document.getElementById('showMaxCap').checked;
+    DB.settings.showHeatFert = document.getElementById('showHeatFert').checked;
+    persist();
+
+    const isMultiTarget = document.getElementById('modeToggle').checked;
+    const currentTargets = isMultiTarget
+        ? [...document.querySelectorAll('.multi-target-row')].map(row => ({
+            item: row.dataset.item || '',
+            rate: parseFloat(row.querySelector('.multi-rate-input')?.value) || 0
+        })).filter(target => target.item)
+        : [{
+            item: document.getElementById('targetItemInput').value.trim(),
+            rate: parseFloat(document.getElementById('targetRate').value) || 0
+        }];
+
+    return {
+        format: 'alchemy-factory-plan',
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        databaseVersion: DB.version ?? null,
+        gameVersion: DB.gameVersion ?? null,
+        plan: {
+            mode: isMultiTarget ? 'multi' : 'single',
+            targets: currentTargets,
+            settings: JSON.parse(JSON.stringify(DB.settings))
+        }
+    };
+}
+
+function getProductionPlanDisplayName(payload) {
+    const names = (payload?.plan?.targets || []).map(target => target.item).filter(Boolean);
+    return names.join(' + ') || t('Untitled plan', 'ui');
+}
+
+function readRecentProductionPlans() {
+    try {
+        const parsed = JSON.parse(localStorage.getItem(RECENT_PRODUCTION_PLANS_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed.filter(entry => entry?.id && entry?.payload) : [];
+    } catch (error) {
+        console.warn('Recent production plan cache is invalid; resetting it.', error);
+        localStorage.removeItem(RECENT_PRODUCTION_PLANS_KEY);
+        return [];
+    }
+}
+
+function cacheRecentProductionPlan(payload) {
+    const recent = readRecentProductionPlans();
+    // Identical snapshots are moved to the top; different rates/settings for the
+    // same target remain separate plans and can still be switched between.
+    const signature = JSON.stringify(payload.plan);
+    const previous = recent.find(entry => entry.signature === signature);
+    const entry = {
+        id: previous?.id || `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        signature,
+        name: getProductionPlanDisplayName(payload),
+        usedAt: new Date().toISOString(),
+        payload
+    };
+    const updated = [entry, ...recent.filter(item => item.id !== entry.id)]
+        .slice(0, MAX_RECENT_PRODUCTION_PLANS);
+    try {
+        localStorage.setItem(RECENT_PRODUCTION_PLANS_KEY, JSON.stringify(updated));
+    } catch (error) {
+        console.warn('Could not cache recent production plan.', error);
+    }
+    renderRecentProductionPlans(entry.id);
+    return entry.id;
+}
+
+function renderRecentProductionPlans(selectedId = '') {
+    const select = document.getElementById('recent-production-plans');
+    if (!select) return;
+    select.replaceChildren(new Option(t('Recent plans', 'ui'), ''));
+    readRecentProductionPlans().forEach(entry => {
+        const when = new Date(entry.usedAt);
+        const timeLabel = Number.isNaN(when.getTime()) ? '' : ` — ${when.toLocaleString()}`;
+        select.appendChild(new Option(`${entry.name}${timeLabel}`, entry.id));
+    });
+    select.value = selectedId;
+}
+
+function isValidProductionPlanPayload(payload) {
+    if (payload?.format !== 'alchemy-factory-plan' || payload.version !== 1) return false;
+    if (!payload.plan || !['single', 'multi'].includes(payload.plan.mode)) return false;
+    if (!Array.isArray(payload.plan.targets) || typeof payload.plan.settings !== 'object' || !payload.plan.settings) return false;
+    return payload.plan.targets.every(target => target && typeof target.item === 'string' && Number.isFinite(Number(target.rate)));
+}
+
+async function decodeProductionPlanText(text) {
+    const marker = 'AFCPLAN1:GZIP:';
+    text = text.trim();
+    if (!text.startsWith(marker)) throw new Error('Unsupported production plan marker.');
+    if (typeof DecompressionStream !== 'function') {
+        throw new Error('PLAN_DECOMPRESSION_UNSUPPORTED');
+    }
+
+    const binary = atob(text.slice(marker.length).trim());
+    const compressedBytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+    const decompressedStream = new Blob([compressedBytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const json = await new Response(decompressedStream).text();
+    const payload = JSON.parse(json);
+    if (!isValidProductionPlanPayload(payload)) throw new Error('Invalid production plan payload.');
+    return payload;
+}
+
+function applyProductionPlanPayload(payload) {
+    if (!isValidProductionPlanPayload(payload)) throw new Error('Invalid production plan payload.');
+
+    const importedSettings = payload.plan.settings;
+    const allowedSettings = new Set([...Object.keys(DEFAULT_SETTINGS), 'multiTargets']);
+    const nextSettings = JSON.parse(JSON.stringify(DB.settings || DEFAULT_SETTINGS));
+    Object.keys(importedSettings).forEach(key => {
+        if (allowedSettings.has(key)) nextSettings[key] = JSON.parse(JSON.stringify(importedSettings[key]));
+    });
+
+    const targets = payload.plan.targets.map(target => ({
+        item: target.item,
+        rate: Number(target.rate) || 0
+    }));
+    const firstTarget = targets[0] || { item: '', rate: 0 };
+    nextSettings.targetItem = firstTarget.item;
+    nextSettings.targetRate = firstTarget.rate;
+    nextSettings.multiTargets = targets;
+    DB.settings = nextSettings;
+    persist();
+
+    loadSettingsToUI();
+    document.getElementById('targetItemInput').value = firstTarget.item;
+    document.getElementById('targetRate').value = firstTarget.rate;
+    document.getElementById('targetMachine').value = nextSettings.targetMachineCount ?? 1;
+    document.getElementById('machineModeToggle').checked = Boolean(nextSettings.machineModeToggle);
+    document.getElementById('nodeScaleSlider').value = nextSettings.nodeSize ?? 1;
+    setNodeScale(nextSettings.nodeSize ?? 1);
+
+    ['showBeltCount', 'showFuelFert', 'showRawMachineCount', 'showMaxCap', 'showHeatFert'].forEach(key => {
+        document.getElementById(key).checked = Boolean(nextSettings[key]);
+    });
+    [['btnSelfFuel', 'selfFuel'], ['btnSelfFert', 'selfFert']].forEach(([buttonId, settingKey]) => {
+        const button = document.getElementById(buttonId);
+        const enabled = Boolean(nextSettings[settingKey]);
+        button.classList.toggle('btn-active-green', enabled);
+        button.classList.toggle('btn-inactive-red', !enabled);
+    });
+
+    const isMulti = payload.plan.mode === 'multi';
+    document.getElementById('modeToggle').checked = isMulti;
+    document.getElementById('calc-mode-btn-single').classList.toggle('active', !isMulti);
+    document.getElementById('calc-mode-btn-multi').classList.toggle('active', isMulti);
+    document.getElementById('single-target-ui').style.display = isMulti ? 'none' : 'block';
+    document.getElementById('multi-target-ui').style.display = isMulti ? 'block' : 'none';
+    const multiTargetList = document.getElementById('multi-target-list');
+    multiTargetList.innerHTML = '';
+    if (isMulti) targets.forEach(target => addMultiTargetRow(target.item, target.rate));
+
+    updateComboIcon();
+    toggleControlMode(false);
+    calculate();
+}
+
+function openProductionPlanFilePicker() {
+    document.getElementById('production-plan-file-input')?.click();
+}
+
+async function loadProductionPlanFile(input) {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    try {
+        const payload = await decodeProductionPlanText(await file.text());
+        applyProductionPlanPayload(payload);
+        cacheRecentProductionPlan(payload);
+        flashButton(document.getElementById('load-production-plan-btn'));
+    } catch (error) {
+        console.error('Failed to load production plan.', error);
+        const message = error.message === 'PLAN_DECOMPRESSION_UNSUPPORTED'
+            ? 'This browser does not support plan decompression.'
+            : 'Invalid or unsupported production plan file.';
+        alert(t(message, 'ui'));
+    }
+}
+
+function loadRecentProductionPlan(planId) {
+    if (!planId) return;
+    try {
+        const entry = readRecentProductionPlans().find(item => item.id === planId);
+        if (!entry || !isValidProductionPlanPayload(entry.payload)) throw new Error('Recent plan not found.');
+        applyProductionPlanPayload(entry.payload);
+        cacheRecentProductionPlan(entry.payload);
+    } catch (error) {
+        console.error('Failed to load recent production plan.', error);
+        alert(t('Failed to load production plan.', 'ui'));
+        renderRecentProductionPlans();
+    }
+}
+
+/**
+ * Export the calculator's current production plan as a small, portable text file.
+ * The payload is UTF-8 JSON -> gzip -> Base64, prefixed with a format marker so the
+ * importer can validate and decode it without guessing the encoding.
+ */
+async function downloadCompressedProductionPlan(button) {
+    if (typeof CompressionStream !== 'function') {
+        alert(t('This browser does not support plan compression.', 'ui'));
+        return;
+    }
+
+    try {
+        const payload = captureProductionPlanPayload();
+        const currentTargets = payload.plan.targets;
+
+        const jsonBytes = new TextEncoder().encode(JSON.stringify(payload));
+        const compressedStream = new Blob([jsonBytes]).stream().pipeThrough(new CompressionStream('gzip'));
+        const compressedBytes = new Uint8Array(await new Response(compressedStream).arrayBuffer());
+
+        let binary = '';
+        const chunkSize = 0x8000;
+        for (let offset = 0; offset < compressedBytes.length; offset += chunkSize) {
+            binary += String.fromCharCode(...compressedBytes.subarray(offset, offset + chunkSize));
+        }
+        const encodedPlan = 'AFCPLAN1:GZIP:' + btoa(binary);
+
+        const targetName = currentTargets.map(target => target.item).filter(Boolean).join('_') || 'untitled';
+        const safeName = targetName.replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '').slice(0, 80) || 'untitled';
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const blob = new Blob([encodedPlan], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = `alchemy_plan_${safeName}_${timestamp}.txt`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+
+        cacheRecentProductionPlan(payload);
+        flashButton(button);
+    } catch (error) {
+        console.error('Failed to save production plan.', error);
+        alert(t('Failed to save production plan.', 'ui'));
+    }
+}
 
 function toggleControlMode(shouldCalculate = false) {
     const isMachineMode = document.getElementById('machineModeToggle').checked;    
@@ -565,6 +842,34 @@ function adjustRate(delta) {
 }
 
 function adjustInput(id, delta) { const el = document.getElementById(id); let val = parseInt(el.value) || 0; el.value = Math.max(0, val + delta); saveSettings(); }
+
+function openAppDrawer(name) {
+    closeAppDrawers();
+    const drawer = document.getElementById(name + '-drawer');
+    const backdrop = document.getElementById('app-drawer-backdrop');
+    if (!drawer || !backdrop) return;
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden', 'false');
+    backdrop.hidden = false;
+    document.body.classList.add('app-drawer-open');
+    requestAnimationFrame(() => drawer.querySelector('button, input, a')?.focus());
+}
+
+function closeAppDrawers() {
+    document.querySelectorAll('.app-sidepane.open').forEach(drawer => {
+        drawer.classList.remove('open');
+        drawer.setAttribute('aria-hidden', 'true');
+    });
+    const backdrop = document.getElementById('app-drawer-backdrop');
+    if (backdrop) backdrop.hidden = true;
+    document.body.classList.remove('app-drawer-open');
+}
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.querySelector('.app-sidepane.open')) {
+        closeAppDrawers();
+    }
+});
 
 
 /* ==========================================================================
@@ -817,7 +1122,7 @@ function _renderRecipeModalScopeBar() {
         btn.className = 'cauldron-shortcut-btn swap-btn';
         btn.style.cssText = 'margin-left:8px; width:auto; padding:2px 6px; border-radius:4px; font-size:0.8em;';
         btn.innerText = t('+ Add Cauldron Recipe');
-        btn.onclick = (e) => { e.stopPropagation(); openCauldronRecipeModal(_recipeModalItem); };
+        btn.onclick = (e) => { e.stopPropagation(); openCauldronRecipeModal(_recipeModalItem, _recipeModalPathKey); };
         titleEl.appendChild(btn);
     }
 

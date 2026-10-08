@@ -140,11 +140,13 @@ function init() {
         console.error(e);
     }
 
+    if (typeof initPlannerPage === 'function') initPlannerPage();
     calculate();
+    if (typeof renderRecentProductionPlans === 'function') renderRecentProductionPlans();
     
     if (urlTab) switchTab(urlTab, false);
 
-    document.getElementById('db-gameversion-text').innerText = t("Game version : ") + DB.gameVersion ?? 0;
+    document.getElementById('db-gameversion-text').innerText = DB.gameVersion ?? 0;
     
     const metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc) {
@@ -156,7 +158,7 @@ function init() {
 
 function loadSettingsToUI() {
     if (DB.settings) {
-        ['lvlBelt','lvlSpeed','lvlAlchemy','lvlFuel','lvlFert', 'lvlSell', 'lvlContract'].forEach(k => { if(DB.settings[k] !== undefined) document.getElementById(k).value = DB.settings[k]; });
+        ['lvlBelt','lvlSpeed','lvlAlchemy','lvlFuel','lvlFert','lvlKnowledge', 'lvlSell', 'lvlContract'].forEach(k => { if(DB.settings[k] !== undefined) document.getElementById(k).value = DB.settings[k]; });
         if(DB.settings.defaultFuel) document.getElementById('fuelSelect').value = DB.settings.defaultFuel; 
         if(DB.settings.defaultFert) document.getElementById('fertSelect').value = DB.settings.defaultFert;
         const heatingSel = document.getElementById('heatingDeviceSelect');
@@ -272,7 +274,7 @@ function performUpdate() {
 
 function translateText() {
     const selectors = [
-        'h1', '.panel h3', '.section-header', 
+        'h1', '.panel h3', '.section-header', '#view-knowledge h2', '#view-knowledge .knowledge-heading p', '#view-knowledge .knowledge-note', '#view-knowledge option',
         'label', '.checkbox-row span', '.stat-label', '.scale-row-label',
         '.tab-btn', '.split-btn', '.save-btn', '.reset-btn', '.soild-btn', '.info'
     ].join(',');
@@ -312,13 +314,15 @@ function toggleLanguage() {
    ========================================================================== */
 
 function switchTab(tabName, updateUrl = true) {
+    const openIntegratedGraph = tabName === 'planner';
+    const openSettingsDrawer = tabName === 'db';
+    if (openIntegratedGraph || openSettingsDrawer) tabName = 'calc';
     let btnIndex = 0;
     switch (tabName) {
         case 'calc': btnIndex = 0; break;
         case 'cauldron': btnIndex = 1; break;
-        case 'planner': btnIndex = 2; break;
+        case 'knowledge': btnIndex = 2; break;
         case 'help': btnIndex = 3; break;
-        case 'db': btnIndex = 4; break;
         default: return;
     }
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -338,11 +342,24 @@ function switchTab(tabName, updateUrl = true) {
     if (tabName === 'help' && typeof initHelpPage === 'function') {
         initHelpPage();
     }
-    if (tabName === 'planner' && typeof initPlannerPage === 'function') {
-        initPlannerPage();
+    if (tabName === 'knowledge' && typeof initKnowledgePage === 'function') {
+        initKnowledgePage();
     }
     if (tabName === 'calc') {
         syncCauldronToMainDB(); // 回到計算器頁面時, 嘗試同步煉金鍋配方
+    }
+    if (openIntegratedGraph && typeof setProductionChainView === 'function') {
+        setProductionChainView('graph');
+        const legacyUrl = new URL(window.location.href);
+        legacyUrl.searchParams.delete('tab');
+        legacyUrl.searchParams.delete('view');
+        window.history.replaceState(null, '', legacyUrl.pathname + (legacyUrl.search ? legacyUrl.search : ''));
+    }
+    if (openSettingsDrawer && typeof openAppDrawer === 'function') {
+        openAppDrawer('settings');
+        const legacyUrl = new URL(window.location.href);
+        legacyUrl.searchParams.delete('tab');
+        window.history.replaceState(null, '', legacyUrl.pathname + (legacyUrl.search ? legacyUrl.search : ''));
     }
 }
 

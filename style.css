@@ -68,9 +68,107 @@ main { flex: 1; overflow: hidden; position: relative; }
 
 .app-grid { 
     display: grid; 
-    grid-template-columns: 260px minmax(calc(540px * var(--node-scale)), 1fr) 220px 200px; 
+    grid-template-columns: 260px minmax(calc(540px * var(--node-scale)), 1fr) 230px;
     gap: 15px; 
     max-width: 1920px; margin: 0 auto; height: 100%; 
+}
+
+/* Slide-over controls: current-plan upgrades on the left, app settings on the right. */
+.header-settings-btn,
+.upgrades-drawer-trigger {
+    display: grid; place-items: center; border: 1px solid var(--border);
+    background: #222; color: #ddd; cursor: pointer; box-shadow: 0 4px 18px rgba(0,0,0,.35);
+}
+.header-settings-btn { width: 36px; height: 36px; border-radius: 8px; font-size: 1.25rem; flex: 0 0 auto; }
+.header-settings-btn:hover,
+.upgrades-drawer-trigger:hover { color: #fff; border-color: var(--accent); background: #2a2a2a; }
+.upgrades-drawer-trigger {
+    position: fixed; left: 0; top: 50%; z-index: 70; transform: translateY(-50%);
+    width: 36px; height: 54px; border-left: 0; border-radius: 0 9px 9px 0;
+    color: var(--accent); font-size: 1.1rem;
+}
+.app-drawer-backdrop {
+    position: fixed; inset: 0; z-index: 880; background: rgba(0,0,0,.62); backdrop-filter: blur(2px);
+}
+.app-drawer-backdrop[hidden] { display: none; }
+.app-sidepane {
+    position: fixed; top: 0; bottom: 0; z-index: 900; width: min(380px, 92vw);
+    display: flex; flex-direction: column; background: #181818; border-color: var(--border);
+    box-shadow: 0 0 35px rgba(0,0,0,.55); transition: transform .2s ease; visibility: hidden;
+}
+.app-sidepane-left { left: 0; border-right: 1px solid var(--border); transform: translateX(-102%); }
+.app-sidepane-right { right: 0; border-left: 1px solid var(--border); transform: translateX(102%); }
+.app-sidepane.open { transform: translateX(0); visibility: visible; }
+.app-sidepane-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    padding: 18px; border-bottom: 1px solid var(--border); background: #111;
+}
+.app-sidepane-header h2 { margin: 0; color: #fff; font-size: 1.05rem; }
+.app-sidepane-header p { margin: 4px 0 0; color: #888; font-size: .78rem; }
+.app-sidepane-body { padding: 18px; overflow-y: auto; }
+.app-sidepane-body .input-group { margin-bottom: 18px; }
+.app-sidepane-divider { height: 1px; margin: 18px 0; background: var(--border); }
+.settings-sidepane-body { display: flex; flex-direction: column; gap: 10px; }
+.settings-action-btn,
+.settings-link-btn {
+    display: flex; align-items: center; min-height: 42px; width: 100%; padding: 9px 12px;
+    border: 1px solid var(--border); border-radius: 6px; background: #242424; color: #eee;
+    font: inherit; text-decoration: none; cursor: pointer;
+}
+.settings-action-btn:hover,
+.settings-link-btn:hover { border-color: var(--accent); background: #2b2b2b; }
+.settings-meta-row { display: flex; justify-content: space-between; gap: 12px; padding: 7px 2px; color: #999; }
+.settings-meta-row strong { color: #eee; text-align: right; }
+.settings-sidepane-body .reset-btn { margin: 0; min-height: 40px; }
+.settings-sidepane-body .danger-action { border-color: rgba(244,67,54,.65); color: #ff8a80; }
+body.app-drawer-open { overflow: hidden; }
+
+/* Knowledge Altar EXP calculator */
+.knowledge-page { max-width: 1500px; margin: 0 auto; padding: 4px 0 24px; }
+.knowledge-heading { display:flex; justify-content:space-between; gap:16px; margin-bottom:15px; }
+.knowledge-heading h2 { margin:0 0 5px; color:var(--accent); font-size:1.35rem; }
+.knowledge-heading p, .knowledge-note { margin:0; color:#999; line-height:1.5; }
+.knowledge-control-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:15px; }
+.knowledge-control-card { min-height:150px; }
+.knowledge-number-input, #knowledge-search {
+    width:100%; min-height:36px; padding:7px 9px; border:1px solid #555; border-radius:4px;
+    background:#292929; color:#fff; font:inherit;
+}
+.knowledge-level-inputs { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+.knowledge-level-result { margin-top:8px; color:var(--gold); font-weight:600; line-height:1.6; }
+.panel.knowledge-table-panel { padding:0; overflow:hidden; }
+.knowledge-table-toolbar { display:flex; align-items:center; gap:10px; padding:12px; border-bottom:1px solid var(--border); }
+.knowledge-table-panel .knowledge-table-toolbar h3 { flex:1; margin:0; padding:0; border:0; }
+.knowledge-table-toolbar #knowledge-search { width:min(300px, 35vw); }
+.knowledge-table-toolbar select { width:auto; min-width:170px; }
+.knowledge-table-wrapper { max-height:calc(100vh - 360px); min-height:300px; overflow:auto; }
+.knowledge-table { width:100%; border-collapse:collapse; }
+.knowledge-table th { position:sticky; top:0; z-index:2; padding:10px 8px; background:#252525; border-bottom:2px solid var(--border); text-align:right; white-space:nowrap; }
+.knowledge-table th:first-child { text-align:left; }
+.knowledge-table td { padding:8px; border-bottom:1px solid #383838; text-align:right; white-space:nowrap; }
+.knowledge-table td:first-child { text-align:left; }
+.knowledge-table tbody tr:hover { background:#292929; }
+.knowledge-item { display:flex; align-items:center; gap:8px; }
+.knowledge-item img { width:24px; height:24px; image-rendering:auto; }
+.knowledge-relic-tag { color:var(--gold); font-size:.72em; border:1px solid #806f18; border-radius:3px; padding:1px 4px; }
+.knowledge-formula-note { padding:10px 12px; border-top:1px solid var(--border); }
+@media (max-width:760px) {
+    .knowledge-control-grid { grid-template-columns:1fr; }
+    .knowledge-level-inputs { grid-template-columns:1fr; }
+    .knowledge-table-toolbar { align-items:stretch; flex-direction:column; }
+    .knowledge-table-toolbar #knowledge-search, .knowledge-table-toolbar select { width:100%; }
+    .knowledge-table-wrapper { max-height:none; }
+}
+
+@media (max-width: 1100px) {
+    .app-grid { grid-template-columns: 250px minmax(520px, 1fr); }
+    .app-grid > div:nth-child(3) { grid-column: 1 / -1; }
+}
+
+@media (max-width: 760px) {
+    .app-grid { display: block; min-width: 0; }
+    .upgrades-drawer-trigger { top: auto; bottom: 76px; transform: none; }
+    .app-sidepane { width: min(360px, 94vw); }
 }
 
 .panel { 

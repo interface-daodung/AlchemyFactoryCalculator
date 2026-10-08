@@ -63,22 +63,120 @@
     </div>
 
     <header>
-        <div style="display:flex; align-items:baseline;">
+        <div style="display:flex; align-items:baseline; min-width:0;">
             <h1>Alchemy Factory Calculator</h1>
-            <span style="margin-left: 10px;">
-                <span id="ui-lang-toggle" style="cursor:pointer; margin-right: 10px;" onclick="toggleLanguage()" title="EN/Tiếng Việt">🌐EN/Tiếng Việt</span>
-                <a href="https://github.com/starfi5h/AlchemyFactoryCalculator" target="_blank" class="repo-link">GitHub Repo</a>
-                <span id="last-updated-time-text">2026.09.25</span>
-            </span>
         </div>
         <div class="tabs" id="page-tab-container">
             <div class="tab-btn active" onclick="switchTab('calc')">Calculator</div>
             <div class="tab-btn" onclick="switchTab('cauldron')">Cauldron</div>
-            <div class="tab-btn" onclick="switchTab('planner')">Planner</div>
+            <div class="tab-btn" onclick="switchTab('knowledge')">Knowledge</div>
             <div class="tab-btn" onclick="switchTab('help')">Wiki</div>
-            <div class="tab-btn" onclick="switchTab('db')">Database Editor</div>
         </div>
+        <button class="header-settings-btn" type="button" onclick="openAppDrawer('settings')" title="Settings" aria-label="Settings">⚙</button>
     </header>
+
+    <button id="upgrades-drawer-trigger" class="upgrades-drawer-trigger" type="button"
+        onclick="openAppDrawer('upgrades')" title="Upgrades" aria-label="Upgrades">⬆</button>
+
+    <div id="app-drawer-backdrop" class="app-drawer-backdrop" hidden onclick="closeAppDrawers()"></div>
+
+    <aside id="upgrades-drawer" class="app-sidepane app-sidepane-left" aria-hidden="true">
+        <div class="app-sidepane-header">
+            <div>
+                <h2>Upgrades (Levels)</h2>
+                <p>Applied to the current production plan</p>
+            </div>
+            <button class="close-modal" type="button" onclick="closeAppDrawers()" aria-label="Close">&times;</button>
+        </div>
+        <div class="app-sidepane-body">
+            <div class="input-group">
+                <label id="lvlBelt-title" for="lvlBelt">Logistics Efficiency</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlBelt', -1); updateFromSlider();">-</button>
+                    <input type="number" id="lvlBelt" value="0" min="0" oninput="updateFromSlider()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlBelt', 1); updateFromSlider();">+</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label id="lvlSpeed-title" for="lvlSpeed">Factory Efficiency</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlSpeed', -1); calculate();">-</button>
+                    <input type="number" id="lvlSpeed" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlSpeed', 1); calculate();">+</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label id="lvlAlchemy-title" for="lvlAlchemy">Alchemy Skill</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlAlchemy', -1); calculate();">-</button>
+                    <input type="number" id="lvlAlchemy" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlAlchemy', 1); calculate();">+</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label id="lvlFuel-title" for="lvlFuel">Fuel Efficiency</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlFuel', -1); calculate();">-</button>
+                    <input type="number" id="lvlFuel" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlFuel', 1); calculate();">+</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label id="lvlFert-title" for="lvlFert">Fert Efficiency</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlFert', -1); calculate();">-</button>
+                    <input type="number" id="lvlFert" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlFert', 1); calculate();">+</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label id="lvlKnowledge-title" for="lvlKnowledge">Relic Knowledge</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlKnowledge', -1); renderKnowledgePage();">-</button>
+                    <input type="number" id="lvlKnowledge" value="0" min="0" max="99" oninput="renderKnowledgePage()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlKnowledge', 1); renderKnowledgePage();">+</button>
+                </div>
+            </div>
+            <div class="app-sidepane-divider"></div>
+            <div class="input-group">
+                <label id="lvlSell-title" for="lvlSell" title="Shop profit + Sales type profit">Selling Price</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlSell', -1); calculate();">-</button>
+                    <input type="number" id="lvlSell" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlSell', 1); calculate();">+</button>
+                </div>
+            </div>
+            <div class="input-group">
+                <label id="lvlContract-title" for="lvlContract" title="Purchase contract reward bonus">Wholesale Price</label>
+                <div class="spinner-wrapper">
+                    <button class="spinner-btn left first" onclick="adjustInput('lvlContract', -1); calculate();">-</button>
+                    <input type="number" id="lvlContract" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
+                    <button class="spinner-btn right last" onclick="adjustInput('lvlContract', 1); calculate();">+</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <aside id="settings-drawer" class="app-sidepane app-sidepane-right" aria-hidden="true">
+        <div class="app-sidepane-header">
+            <div>
+                <h2>Settings</h2>
+                <p>Application preferences and reset tools</p>
+            </div>
+            <button class="close-modal" type="button" onclick="closeAppDrawers()" aria-label="Close">&times;</button>
+        </div>
+        <div class="app-sidepane-body settings-sidepane-body">
+            <button id="ui-lang-toggle" class="settings-action-btn" type="button" onclick="toggleLanguage()" title="EN/Tiếng Việt">🌐 EN / Tiếng Việt</button>
+            <a href="https://github.com/starfi5h/AlchemyFactoryCalculator" target="_blank" rel="noopener" class="settings-action-btn settings-link-btn">↗ GitHub Repo</a>
+            <div class="settings-meta-row"><span>Last updated</span><strong id="last-updated-time-text">2026.09.25</strong></div>
+            <div class="settings-meta-row"><span>Game version</span><strong id="db-gameversion-text"></strong></div>
+            <div class="app-sidepane-divider"></div>
+            <button class="reset-btn" onclick="resetSettings()">Reset Settings</button>
+            <button class="reset-btn" onclick="resetRecips()">Reset Recipes</button>
+            <button class="reset-btn" onclick="resetTranslations()">Reset Translations</button>
+            <button class="reset-btn danger-action" onclick="resetAllData()">All Data Reset</button>
+        </div>
+    </aside>
 
     <main>
         <div id="recipe-modal" class="modal-overlay" onclick="closeModal('recipe-modal')">
@@ -438,7 +536,48 @@
                     <div id="summary-icons"></div>
                     <div id="summary-line" style="margin-bottom: 5px;"></div>
                     <div id="equilibrium-warning-line" style="margin: 4px 0 8px; font-size: 0.95em; display:block; color: var(--warn);"></div>
+                    <div class="production-view-toolbar">
+                        <span class="section-header">--- <span>Production Chain</span> ---</span>
+                        <div class="planner-display-toggle" role="group" aria-label="Production chain view">
+                            <button id="production-tree-mode-btn" class="tab-btn mini-tab active" type="button" onclick="setProductionChainView('tree')">Tree</button>
+                            <button id="production-graph-mode-btn" class="tab-btn mini-tab" type="button" onclick="setProductionChainView('graph')">TreeGraph</button>
+                        </div>
+                        <div class="production-plan-actions">
+                            <select id="recent-production-plans" class="production-plan-recent-select"
+                                onchange="loadRecentProductionPlan(this.value)" title="Switch to a recently used plan"
+                                aria-label="Recent plans">
+                                <option value="">Recent plans</option>
+                            </select>
+                            <button id="load-production-plan-btn" class="split-btn production-plan-action-btn" type="button"
+                                onclick="openProductionPlanFilePicker()" title="Load a saved plan file">
+                                ⭱ Load Plan
+                            </button>
+                            <button id="save-production-plan-btn" class="split-btn production-plan-action-btn" type="button"
+                                onclick="downloadCompressedProductionPlan(this)" title="Save the current plan as compressed Base64 text">
+                                ⭳ Save Plan
+                            </button>
+                            <input id="production-plan-file-input" type="file" accept=".txt,text/plain" hidden
+                                onchange="loadProductionPlanFile(this)">
+                        </div>
+                    </div>
                     <div id="tree"></div>
+                    <div id="production-treegraph" class="production-treegraph" hidden>
+                        <div id="planner-canvas" class="planner-canvas" oncontextmenu="event.preventDefault()">
+                            <div id="planner-viewport" class="planner-viewport">
+                                <svg id="planner-svg-layer" class="planner-svg-layer"></svg>
+                                <div id="planner-nodes-layer" class="planner-nodes-layer"></div>
+                            </div>
+
+                            <div class="planner-view-controls">
+                                <button id="planner-grid-btn" class="planner-view-btn" onclick="plannerCycleGridSnap()" title="Grid Snap">⊞</button>
+                                <button id="planner-edge-style-btn" class="planner-view-btn" onclick="togglePlannerEdgeStyle()" title="Edge Style: Dashed (animated)">⇢</button>
+                                <button class="planner-view-btn" onclick="plannerZoomIn()" title="Zoom In (+)">+</button>
+                                <button class="planner-view-btn" onclick="plannerZoomOut()" title="Zoom Out (-)">−</button>
+                                <button class="planner-view-btn" onclick="plannerFitToView()" title="Fit to View (F)">⤢</button>
+                                <button class="planner-view-btn" onclick="plannerOptimizeAllPortOrders()" title="Optimize Port Order">🔀</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div>
@@ -454,88 +593,6 @@
                     </div>
                 </div>
 
-                <div>
-                    <div class="panel">
-                        <div class="panel-header-row">
-                            <h3>Upgrades (Levels)</h3>
-                            <button class="panel-collapse-btn" onclick="togglePanelCollapse(this)">▼</button>
-                        </div>
-                        <div class="panel-body">
-                            <div class="input-group">
-                                <label id="lvlBelt-title" for="lvlBelt">Logistics Efficiency</label>
-                                <div class="spinner-wrapper">
-                                    <button class="spinner-btn left first" onclick="adjustInput('lvlBelt', -1); updateFromSlider();">-</button>
-                                    <input type="number" id="lvlBelt" value="0" min="0" oninput="updateFromSlider()" onchange="saveSettings()">
-                                    <button class="spinner-btn right last" onclick="adjustInput('lvlBelt', 1); updateFromSlider();">+</button>
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <label id="lvlSpeed-title" for="lvlSpeed">Factory Efficiency</label>
-                                <div class="spinner-wrapper">
-                                    <button class="spinner-btn left first" onclick="adjustInput('lvlSpeed', -1); calculate();">-</button>
-                                    <input type="number" id="lvlSpeed" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
-                                    <button class="spinner-btn right last" onclick="adjustInput('lvlSpeed', 1); calculate();">+</button>
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <label id="lvlAlchemy-title" for="lvlAlchemy">Alchemy Skill</label>
-                                <div class="spinner-wrapper">
-                                    <button class="spinner-btn left first" onclick="adjustInput('lvlAlchemy', -1); calculate();">-</button>
-                                    <input type="number" id="lvlAlchemy" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
-                                    <button class="spinner-btn right last" onclick="adjustInput('lvlAlchemy', 1); calculate();">+</button>
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <label id="lvlFuel-title" for="lvlFuel">Fuel Efficiency</label>
-                                <div class="spinner-wrapper">
-                                    <button class="spinner-btn left first" onclick="adjustInput('lvlFuel', -1); calculate();">-</button>
-                                    <input type="number" id="lvlFuel" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
-                                    <button class="spinner-btn right last" onclick="adjustInput('lvlFuel', 1); calculate();">+</button>
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <label id="lvlFert-title" for="lvlFert">Fert Efficiency</label>
-                                <div class="spinner-wrapper">
-                                    <button class="spinner-btn left first" onclick="adjustInput('lvlFert', -1); calculate();">-</button>
-                                    <input type="number" id="lvlFert" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
-                                    <button class="spinner-btn right last" onclick="adjustInput('lvlFert', 1); calculate();">+</button>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid #555; margin: 20px 0 10px 0;"></div>
-                            <div class="input-group">
-                                <label id="lvlSell-title" for="lvlSell" title="Shop profit + Sales type profit">Selling Price</label>
-                                <div class="spinner-wrapper">
-                                    <button class="spinner-btn left first" onclick="adjustInput('lvlSell', -1); calculate();">-</button>
-                                    <input type="number" id="lvlSell" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
-                                    <button class="spinner-btn right last" onclick="adjustInput('lvlSell', 1); calculate();">+</button>
-                                </div>
-                            </div>
-                            <div class="input-group">
-                                <label id="lvlContract-title" for="lvlContract" title="Purchase contract reward bonus">Wholesale Price</label>
-                                <div class="spinner-wrapper">
-                                    <button class="spinner-btn left first" onclick="adjustInput('lvlContract', -1); calculate();">-</button>
-                                    <input type="number" id="lvlContract" value="0" min="0" oninput="calculate()" onchange="saveSettings()">
-                                    <button class="spinner-btn right last" onclick="adjustInput('lvlContract', 1); calculate();">+</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="panel">
-                        <div class="panel-header-row">
-                            <h3>Save/Reset</h3>
-                            <button class="panel-collapse-btn" onclick="togglePanelCollapse(this)">▼</button>
-                        </div>
-                        <div class="panel-body">
-                            <span id="db-gameversion-text"></span>                            
-                            <button class="save-btn" onclick="sendCalcResultToPlanner()">Send to Planner</button>
-                            <button class="reset-btn" onclick="resetSettings()">Reset Settings</button>
-                            <button class="reset-btn" onclick="resetRecips()">Reset Recipes</button>
-                            <button class="reset-btn" onclick="resetTranslations()">Reset Translations</button>
-                            <button class="reset-btn" onclick="resetAllData()">All Data Reset</button>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -688,65 +745,120 @@
             </div>
         </div>
 
-        <div id="view-planner" class="view">
-            <div class="planner-toolbar">
-                <select id="planner-plan-select" class="planner-plan-select" onchange="switchPlannerPlan(this.value)"></select>
-                <button class="split-btn" onclick="openPlannerManageModal()">📁 Manage Plans</button>
-                <span class="planner-toolbar-divider"></span>
-                <button id="planner-select-btn" class="split-btn" onclick="togglePlannerSelectMode()" title="Box Select (Delete key to remove selected)">▭ Select Mode</button>
-                <button id="planner-encapsulate-btn" class="split-btn" onclick="encapsulatePlannerSelectedNodes()" title="Encapsulate selected nodes into a new module">📦 Encapsulate</button>
-                <span class="planner-toolbar-divider"></span>
-                <button class="split-btn" onclick="onPlannerAddNodeClick()">+ Add Node</button>
-                <button class="split-btn" onclick="onPlannerAddNoteClick()">+ 📝 Note</button>
-                <button class="split-btn" onclick="onPlannerAddPortalClick()">+ 🌀 Portal</button>
-                <span class="planner-toolbar-divider"></span>
-                <button id="planner-undo-btn" class="split-btn" onclick="plannerUndo()" title="Undo (Ctrl+Z)">↺ Undo</button>
-                <button id="planner-redo-btn" class="split-btn" onclick="plannerRedo()" title="Redo (Ctrl+Y)">↻ Redo</button>
-                <span class="planner-toolbar-divider"></span>
-                <button class="split-btn" onclick="onPlannerClearAllClick()">Clear All</button>
-            </div>
-            <div id="planner-canvas" class="planner-canvas" oncontextmenu="onPlannerCanvasContextMenu(event)">
-                <div id="planner-viewport" class="planner-viewport">
-                    <svg id="planner-svg-layer" class="planner-svg-layer"></svg>
-                    <div id="planner-nodes-layer" class="planner-nodes-layer"></div>
+        <style>
+            .production-recipe-select {
+                max-width: min(360px, 34vw); min-width: 150px; height: 28px;
+                padding: 2px 26px 2px 7px; border: 1px solid #555; border-radius: 4px;
+                background: #292929; color: #eee; font-size: .78em; cursor: pointer;
+            }
+            .production-recipe-select:hover, .production-recipe-select:focus { border-color: var(--accent); outline: none; }
+            .node.node-override > .node-content .production-recipe-select { border-color: var(--gold); }
+            .planner-display-toggle { display: inline-flex; flex-shrink: 0; }
+            .planner-display-toggle .tab-btn.mini-tab {
+                flex: 0 0 auto; min-width: 82px; min-height: 36px;
+                margin: 0; padding: 7px 14px !important; border-radius: 0;
+                overflow: hidden; white-space: nowrap; line-height: 1.2;
+            }
+            .planner-display-toggle .tab-btn.mini-tab:last-child { min-width: 112px; }
+            .planner-display-toggle .tab-btn:first-child { border-radius: 4px 0 0 4px; }
+            .planner-display-toggle .tab-btn:last-child { border-radius: 0 4px 4px 0; }
+            .production-view-toolbar { display:flex; align-items:center; gap:10px; margin:8px 0; }
+            .production-view-toolbar .section-header { margin-right:auto; }
+            .production-plan-actions { display:flex; align-items:center; gap:6px; flex:0 1 auto; min-width:0; }
+            .production-plan-action-btn { flex:0 0 auto; width:auto; min-height:36px; margin:0; padding:7px 14px; white-space:nowrap; }
+            .production-plan-recent-select { width:auto; min-width:150px; max-width:230px; min-height:36px; margin:0; }
+            .production-treegraph { position:relative; width:100%; min-height:520px; height:min(72vh, 780px); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+            .production-treegraph .planner-canvas { width:100%; height:100%; min-height:520px; }
+            .production-treegraph .planner-close-btn,
+            .production-treegraph .planner-machine-count-row { display:none; }
+            .production-treegraph .planner-port-dot,
+            .production-treegraph .planner-edge-hit,
+            .production-treegraph .planner-edge-label { pointer-events:none; }
+            @media (max-width: 760px) {
+                .production-recipe-select { max-width: 48vw; min-width: 110px; }
+                .production-view-toolbar { align-items:flex-start; flex-direction:column; }
+                .production-view-toolbar .section-header { margin-right:0; }
+                .production-plan-actions { width:100%; flex-wrap:wrap; }
+                .production-plan-action-btn { flex:1 1 130px; min-height:40px; }
+                .production-plan-recent-select { flex:1 1 100%; width:100%; max-width:none; min-height:40px; }
+                .planner-display-toggle .tab-btn.mini-tab { min-height: 40px; padding: 9px 16px !important; }
+                .production-treegraph, .production-treegraph .planner-canvas { min-height:460px; height:65vh; }
+            }
+        </style>
+
+        <div id="view-knowledge" class="view">
+            <div class="knowledge-page">
+                <div class="knowledge-heading">
+                    <div>
+                        <h2>Knowledge Altar EXP Calculator</h2>
+                        <p>Compare items by EXP output and calculate the altars required for your target.</p>
+                    </div>
                 </div>
 
-                <div class="planner-view-controls">
-                    <button id="planner-grid-btn" class="planner-view-btn" onclick="plannerCycleGridSnap()" title="Grid Snap">⊞</button>
-                    <button id="planner-edge-style-btn" class="planner-view-btn" onclick="togglePlannerEdgeStyle()" title="Edge Style: Dashed (animated)">⇢</button>
-                    <button class="planner-view-btn" onclick="plannerZoomIn()" title="Zoom In (+)">+</button>
-                    <button class="planner-view-btn" onclick="plannerZoomOut()" title="Zoom Out (-)">−</button>
-                    <button class="planner-view-btn" onclick="plannerFitToView()" title="Fit to View (F)">⤢</button>
-                    <button class="planner-view-btn" onclick="plannerOptimizeAllPortOrders()" title="Optimize Port Order">🔀</button>
+                <div class="knowledge-control-grid">
+                    <section class="panel knowledge-control-card">
+                        <h3>Target EXP</h3>
+                        <div class="input-group">
+                            <label for="knowledge-target-exp">EXP/min to supply</label>
+                            <input id="knowledge-target-exp" class="knowledge-number-input" type="number" min="0" step="any" value="1000"
+                                oninput="updateKnowledgeSettings(); renderKnowledgeResults()">
+                        </div>
+                        <p class="knowledge-note">Uses Logistics Efficiency, Factory Efficiency and Relic Knowledge from Upgrades.</p>
+                    </section>
+
+                    <section class="panel knowledge-control-card">
+                        <h3>Level Goal</h3>
+                        <div class="knowledge-level-inputs">
+                            <div class="input-group">
+                                <label for="knowledge-current-level">Current level</label>
+                                <input id="knowledge-current-level" class="knowledge-number-input" type="number" min="0" max="999" step="1" value="0"
+                                    oninput="updateKnowledgeSettings(); renderKnowledgeResults()">
+                            </div>
+                            <div class="input-group">
+                                <label for="knowledge-progress-exp">Progress EXP</label>
+                                <input id="knowledge-progress-exp" class="knowledge-number-input" type="number" min="0" step="any" value="0"
+                                    oninput="updateKnowledgeSettings(); renderKnowledgeResults()">
+                            </div>
+                            <div class="input-group">
+                                <label for="knowledge-target-level">Target level</label>
+                                <input id="knowledge-target-level" class="knowledge-number-input" type="number" min="0" max="999" step="1" value="10"
+                                    oninput="updateKnowledgeSettings(); renderKnowledgeResults()">
+                            </div>
+                        </div>
+                        <div id="knowledge-level-result" class="knowledge-level-result"></div>
+                    </section>
                 </div>
+
+                <section class="panel knowledge-table-panel">
+                    <div class="knowledge-table-toolbar">
+                        <h3>Item Comparison</h3>
+                        <input id="knowledge-search" type="search" placeholder="Search items..." oninput="renderKnowledgeResults()">
+                        <select id="knowledge-sort" onchange="renderKnowledgeResults()">
+                            <option value="expRate">EXP/min per altar</option>
+                            <option value="exp">EXP/item</option>
+                            <option value="altars">Fewest altars</option>
+                            <option value="name">Item name</option>
+                        </select>
+                    </div>
+                    <div class="knowledge-table-wrapper">
+                        <table class="knowledge-table">
+                            <thead id="knowledge-table-head"></thead>
+                            <tbody id="knowledge-table-body"></tbody>
+                        </table>
+                    </div>
+                    <p class="knowledge-note knowledge-formula-note">Non-relic EXP = base cost × 0.0002. Altar time is an approximation measured from game data.</p>
+                </section>
             </div>
         </div>
 
         <div id="view-help" class="view"></div>
 
-        <div id="view-db" class="view">
-            <div class="editor-container">
-                <div class="editor-toolbar">
-                    <!-- Add a selector to switch between DB and I18N -->
-                    <select id="editor-target" onchange="loadEditorContent()" style="width: auto; padding: 5px;">
-                        <option value="db">Database</option>
-                        <option value="i18n">Translations</option>
-                        <option value="settings">Settings</option>
-                        <option value="db_backup">(BACKUP) Database</option>
-                        <option value="i18n_backup">(BACKUP) Translations</option>
-                        <option value="settings_backup">(BACKUP) Settings</option>
-                    </select>
-                    <button class="save-btn" onclick="applyChanges()" style="width:auto; margin:0;">Apply Changes</button>
-                    <button class="info" onclick="exportData()" style="padding:10px; background:var(--info); border:none; color:white; border-radius:4px; font-weight:bold; cursor:pointer;">Export to File</button>
-                </div>
-                <textarea id="json-editor"></textarea>
-            </div>
-        </div>
     </main>
     
     <script src="js/alchemy_main.js"></script>
     <script src="js/alchemy_ui.js"></script>
     <script src="js/alchemy_calc.js"></script>
+    <script src="js/alchemy_knowledge.js"></script>
     <script src="js/alchemy_cauldron.js"></script>
     <script src="js/alchemy_readme.js"></script>
     <script src="js/alchemy_help.js"></script>

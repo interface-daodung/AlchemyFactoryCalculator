@@ -779,9 +779,49 @@ function _plannerAssignTreeCoordinates(rootId, children, extents) {
  * Stage 5: 重用 RT-style 排版 (虛擬 root 包裝多個真實 root)
  * Stage 6: resolveFlows 後，砍掉流量趨近於 0 的回收邊
  */
-function plannerImportFromCalcResult(calcResult, params) {
+function plannerReplaceFromCalcResult(calcResult, params, options = {}) {
+    if (!plannerState || !plannerLibrary?.activePlanId) return;
+
+    const activePlan = plannerLibrary.plans[plannerLibrary.activePlanId];
+    const nextState = _createEmptyPlanData();
+    nextState.upgrades = Object.fromEntries(
+        ['lvlBelt','lvlSpeed','lvlAlchemy','lvlFuel','lvlFert','lvlKnowledge','lvlSell','lvlContract']
+            .map(key => [key, Number(DB.settings[key]) || 0])
+    );
+    activePlan.data = nextState;
+    plannerState = nextState;
+    _plannerLastFlows = null;
+    _plannerSelectedNodeIds.clear();
+    plannerHistory[plannerLibrary.activePlanId] = {
+        stack: [JSON.parse(JSON.stringify(nextState))],
+        index: 0
+    };
+
+    const hasRecipeNode = (calcResult?.treeRoots || []).some(entry => {
+        let found = false;
+        const visit = node => {
+            if (node?.recipe && !node.isRaw && !node.isExternal) found = true;
+            (node?.children || []).forEach(visit);
+        };
+        visit(entry.root);
+        return found;
+    });
+
+    if (!hasRecipeNode) {
+        renderPlanner();
+        savePlannerLibraryMeta();
+        return;
+    }
+
+    plannerImportFromCalcResult(calcResult, params, {
+        silent: true,
+        fit: options.fit === true
+    });
+}
+
+function plannerImportFromCalcResult(calcResult, params, options = {}) {
     if (!calcResult || !calcResult.treeRoots || calcResult.treeRoots.length === 0) {
-        alert(t('No calculation result to import.', 'ui'));
+        if (!options.silent) alert(t('No calculation result to import.', 'ui'));
         return;
     }
 
@@ -807,14 +847,19 @@ function plannerImportFromCalcResult(calcResult, params) {
         const isAggregatable = node.recipe && !node.isRaw && !node.isExternal;
         if (!isAggregatable) return; // raw/external/無配方的葉節點：跳過，不生成節點
 
-        const key = node.recipe.id;
+        const key = `${node.recipe.id}::${node.item}`;
         pathKeyToAgg[node.pathKey] = key;
         if (!aggMap[key]) {
             aggMap[key] = {
                 recipeId: node.recipe.id,
+                sourceItem: node.item,
+                sourcePathKeys: [],
                 recipeModifiers: DB.settings.recipeModifiers?.[node.recipe.id],
                 machineCount: 0
             };
+        }
+        if (!aggMap[key].sourcePathKeys.includes(node.pathKey)) {
+            aggMap[key].sourcePathKeys.push(node.pathKey);
         }
         aggMap[key].machineCount += node.machineCount;
 
@@ -828,7 +873,7 @@ function plannerImportFromCalcResult(calcResult, params) {
     calcResult.treeRoots.forEach(entry => {
         walk(entry.root, null, null);
         if (entry.root.recipe && !entry.root.isRaw && !entry.root.isExternal) {
-            rootAggKeys.add(entry.root.recipe.id);
+            rootAggKeys.add(`${entry.root.recipe.id}::${entry.root.item}`);
         }
     });
     // internalModules (燃料/肥料模組) 依需求不處理
@@ -864,7 +909,7 @@ function plannerImportFromCalcResult(calcResult, params) {
     });
 
     if (Object.keys(aggMap).length === 0) {
-        alert(t('Nothing to import (no producible nodes).', 'ui'));
+        if (!options.silent) alert(t('Nothing to import (no producible nodes).', 'ui'));
         return;
     }
 
@@ -889,6 +934,8 @@ function plannerImportFromCalcResult(calcResult, params) {
         plannerState.nodes[nodeId] = {
             id: nodeId, kind: 'recipe',
             recipeId: agg.recipeId,
+            sourceItem: agg.sourceItem,
+            sourcePathKeys: agg.sourcePathKeys,
             recipeModifiers: agg.recipeModifiers,
             machineCount: agg.machineCount,
             x: 0, y: 0
@@ -930,7 +977,7 @@ function plannerImportFromCalcResult(calcResult, params) {
 
     renderPlanner();
     savePlannerState();
-    requestAnimationFrame(() => plannerFitToView(newNodeIds));
+    if (options.fit !== false) requestAnimationFrame(() => plannerFitToView(newNodeIds));
 }
 
 /**

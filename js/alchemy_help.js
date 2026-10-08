@@ -815,10 +815,8 @@ function _renderItemDetail(itemName) {
     if (def.cauldronCost   != null) stats.push([_tn('Cauldron Cost'),   def.cauldronCost]);
     if (def.cauldronTarget != null) stats.push([_tn('Cauldron Target'), def.cauldronTarget]);
     var exp = def.exp || AlchemyCalcEngine.computeDecomposeExp(rawDB, itemName);
-    if (exp && !def.exp && def.maxStack < 0) exp *= -def.maxStack;
     if (exp != null) stats.push([_tn('Decompose Exp'), Number(exp.toFixed(4))]);
     var decomposeTime = AlchemyCalcEngine.computeDecomposeTime(rawDB, itemName);
-    if (decomposeTime && def.maxStack < 0) decomposeTime *= -def.maxStack;
     if (decomposeTime != null) stats.push([_tn('Decompose Time'), decomposeTime.toFixed(2) + ' s']);    
 
     var statsHTML = stats.length

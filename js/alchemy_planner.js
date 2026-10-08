@@ -91,6 +91,10 @@ let _plannerCanvasHovered = false;
 let _plannerLinkMode = false;
 let _plannerSelectMode = false;
 let _plannerSelectedNodeIds = new Set();
+let _productionChainView = 'tree';
+let _plannerInitialized = false;
+let _productionGraphSyncing = false;
+const _plannerIntegratedMode = true;
 const PLANNER_ZOOM_MIN = 0.2;
 const PLANNER_ZOOM_MAX = 3;
 const PLANNER_GRID_STEPS = [40, 20, 0];
@@ -111,10 +115,22 @@ const PLANNER_HISTORY_LIMIT = 10;
 /* ---------------- INIT / PERSISTENCE ---------------- */
 
 function initPlannerPage() {
+    if (_plannerInitialized) return;
+    _plannerInitialized = true;
     _injectPlannerSummaryStyles();
-    loadPlannerLibrary();
     loadPlannerSettings();
-    renderPlannerToolbarSelect();
+    const integratedPlan = {
+        id: 'integrated-production-chain',
+        name: t('Production Chain', 'ui'),
+        updatedAt: Date.now(),
+        data: _createEmptyPlanData()
+    };
+    plannerLibrary = {
+        activePlanId: integratedPlan.id,
+        planOrder: [integratedPlan.id],
+        plans: { [integratedPlan.id]: integratedPlan }
+    };
+    _activatePlanData(integratedPlan.id);
     _plannerViewportCache[plannerLibrary.activePlanId] = { ..._plannerSettings.viewport };
 
     renderPlanner();
@@ -128,6 +144,39 @@ function initPlannerPage() {
     updatePlannerGridBackground();    
     updatePlannerEdgeStyleButton();
     updatePlannerUndoRedoButtons();
+    setProductionChainView('tree', false);
+}
+
+function setProductionChainView(mode, fitGraph = true) {
+    _productionChainView = mode === 'graph' ? 'graph' : 'tree';
+    const treeView = document.getElementById('tree');
+    const graphView = document.getElementById('production-treegraph');
+    const treeBtn = document.getElementById('production-tree-mode-btn');
+    const graphBtn = document.getElementById('production-graph-mode-btn');
+
+    if (treeView) treeView.hidden = _productionChainView !== 'tree';
+    if (graphView) graphView.hidden = _productionChainView !== 'graph';
+    treeBtn?.classList.toggle('active', _productionChainView === 'tree');
+    graphBtn?.classList.toggle('active', _productionChainView === 'graph');
+
+    if (_productionChainView === 'graph') {
+        requestAnimationFrame(() => {
+            syncProductionGraphFromCalculation(_lastCalcResult, _lastCalcParams, true, fitGraph);
+        });
+    }
+}
+
+function syncProductionGraphFromCalculation(result, params, force = false, fitGraph = false) {
+    if (!_plannerInitialized || _productionGraphSyncing || !result) return;
+    if (!force && _productionChainView !== 'graph') return;
+    if (typeof plannerReplaceFromCalcResult !== 'function') return;
+
+    _productionGraphSyncing = true;
+    try {
+        plannerReplaceFromCalcResult(result, params, { fit: fitGraph });
+    } finally {
+        _productionGraphSyncing = false;
+    }
 }
 
 // 讀取UI全局設定
@@ -241,6 +290,7 @@ function _activatePlanData(planId) {
 
 /** 只保存 library 結構本身 (方案清單/順序/目前選中哪個)，不視為對內容的編輯 */
 function savePlannerLibraryMeta() {
+    if (_plannerIntegratedMode) return;
     localStorage.setItem(PLANNER_LIBRARY_KEY, JSON.stringify(plannerLibrary));
 }
 
@@ -249,7 +299,7 @@ function savePlannerState() {
     const plan = plannerLibrary.plans[plannerLibrary.activePlanId];
     if (plan) plan.updatedAt = Date.now();
     _pushPlannerHistory(plannerLibrary.activePlanId);
-    savePlannerLibraryMeta();
+    if (!_plannerIntegratedMode) savePlannerLibraryMeta();
     updatePlannerUndoRedoButtons();
 }
 
