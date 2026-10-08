@@ -72,7 +72,9 @@
             <div class="tab-btn" onclick="switchTab('knowledge')">Knowledge</div>
             <div class="tab-btn" onclick="switchTab('help')">Wiki</div>
         </div>
-        <button class="header-settings-btn" type="button" onclick="openAppDrawer('settings')" title="Settings" aria-label="Settings">⚙</button>
+        <div class="header-actions">
+            <button class="header-settings-btn" type="button" onclick="openAppDrawer('settings')" title="Settings" aria-label="Settings">⚙</button>
+        </div>
     </header>
 
     <button id="upgrades-drawer-trigger" class="upgrades-drawer-trigger" type="button"
@@ -167,6 +169,19 @@
         </div>
         <div class="app-sidepane-body settings-sidepane-body">
             <button id="ui-lang-toggle" class="settings-action-btn" type="button" onclick="toggleLanguage()" title="EN/Tiếng Việt">🌐 EN / Tiếng Việt</button>
+            <button id="theme-toggle" class="settings-action-btn theme-toggle-btn" type="button" onclick="toggleAppTheme()" title="Switch to light theme" aria-label="Switch to light theme">☀️ <span>Theme / Giao diện</span></button>
+            <section class="theme-color-settings" aria-labelledby="theme-color-title">
+                <h3 id="theme-color-title">Theme colors · 7 color system</h3>
+                <div class="theme-color-grid">
+                    <label>Background<input type="color" data-theme-color="bg"></label>
+                    <label>Surface<input type="color" data-theme-color="surface"></label>
+                    <label>Text<input type="color" data-theme-color="text"></label>
+                    <label>Primary<input type="color" data-theme-color="primary"></label>
+                    <label>Secondary<input type="color" data-theme-color="secondary"></label>
+                    <label>Border<input type="color" data-theme-color="border"></label>
+                    <label>Muted text<input type="color" data-theme-color="muted"></label>
+                </div>
+            </section>
             <a href="https://github.com/starfi5h/AlchemyFactoryCalculator" target="_blank" rel="noopener" class="settings-action-btn settings-link-btn">↗ GitHub Repo</a>
             <div class="settings-meta-row"><span>Last updated</span><strong id="last-updated-time-text">2026.09.25</strong></div>
             <div class="settings-meta-row"><span>Game version</span><strong id="db-gameversion-text"></strong></div>
@@ -327,19 +342,19 @@
                     <span class="item-name-label" style="flex:1;" id="base-cost-heat-label">🔥 Heat Cost</span>
                     <input type="number" class="small-num-input" style="width:100px; height:25px;" id="base-cost-heat-per-copper"
                         step="any" min="0" onchange="onBaseCostRateChange('heatPerCopper', this.value)">
-                    <span style="font-size:0.75em; color:#888; white-space:nowrap;">P/¢</span>
+                    <span style="font-size:0.75em; color:var(--muted); white-space:nowrap;">P/¢</span>
                     <input type="number" class="small-num-input" style="width:100px; height:25px;" id="base-cost-copper-per-heat"
                         step="any" min="0" onchange="onBaseCostRateChange('copperPerHeat', this.value)">
-                    <span style="font-size:0.75em; color:#888; white-space:nowrap;">¢/P</span>
+                    <span style="font-size:0.75em; color:var(--muted); white-space:nowrap;">¢/P</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 6px; padding: 6px; margin-bottom: 6px;">
                     <span class="item-name-label" style="flex:1;" id="base-cost-fert-label">🌱 Nutrient Cost</span>
                     <input type="number" class="small-num-input" style="width:100px; height:25px;" id="base-cost-fert-per-copper"
                         step="any" min="0" onchange="onBaseCostRateChange('nutrPerCopper', this.value)">
-                    <span style="font-size:0.75em; color:#888; white-space:nowrap;">V/¢</span>
+                    <span style="font-size:0.75em; color:var(--muted); white-space:nowrap;">V/¢</span>
                     <input type="number" class="small-num-input" style="width:100px; height:25px;" id="base-cost-copper-per-fert"
                         step="any" min="0" onchange="onBaseCostRateChange('copperPerNutr', this.value)">
-                    <span style="font-size:0.75em; color:#888; white-space:nowrap;">¢/V</span>
+                    <span style="font-size:0.75em; color:var(--muted); white-space:nowrap;">¢/V</span>
                 </div>
                 <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
                     <select id="base-cost-cat-select" style="width:60%;" onchange="_renderItemBaseCostList()"></select>
@@ -865,5 +880,61 @@
     <script src="js/alchemy_planner.js"></script>
     <script src="js/alchemy_planner_calc.js"></script>
     <script src="js/alchemy_planner_overlays.js"></script>
+    <script>
+        (() => {
+            const saved = localStorage.getItem('afc-theme') || 'dark';
+            const palettes = ['sage', 'coral', 'lavender', 'sky', 'orange'];
+            const colors = {
+                sage: { bg:'#e1efdc', surface:'#fffdf7', text:'#17140f', primary:'#286b3e', secondary:'#c6dfbd', border:'#17140f', muted:'#393329' },
+                coral: { bg:'#f8e1d9', surface:'#fffdf7', text:'#17140f', primary:'#a93421', secondary:'#edbdae', border:'#17140f', muted:'#393329' },
+                lavender: { bg:'#ebe2f6', surface:'#fffdf7', text:'#17140f', primary:'#573a83', secondary:'#d4c2eb', border:'#17140f', muted:'#393329' },
+                sky: { bg:'#dceef3', surface:'#fffdf7', text:'#17140f', primary:'#075c76', secondary:'#b7dce7', border:'#17140f', muted:'#393329' },
+                orange: { bg:'#f5e8d4', surface:'#fff9ee', text:'#302014', primary:'#b94f12', secondary:'#efd0a7', border:'#704321', muted:'#765942' }
+            };
+            const root = document.documentElement;
+            root.dataset.theme = saved;
+            root.dataset.palette = localStorage.getItem('afc-palette') || 'sage';
+            function applyColors(value) {
+                Object.entries(value).forEach(([key, color]) => root.style.setProperty(`--theme-${key}`, color));
+                document.querySelectorAll('[data-theme-color]').forEach(input => {
+                    input.value = value[input.dataset.themeColor] || colors.sage[input.dataset.themeColor];
+                });
+                localStorage.setItem('afc-theme-colors', JSON.stringify(value));
+            }
+            let savedColors;
+            try { savedColors = JSON.parse(localStorage.getItem('afc-theme-colors') || 'null'); } catch {}
+            applyColors(savedColors || colors[root.dataset.palette] || colors.sage);
+            document.querySelectorAll('[data-theme-color]').forEach(input => input.addEventListener('input', () => {
+                root.dataset.palette = 'custom';
+                const current = Object.fromEntries(Object.keys(colors.sage).map(key => [key, getComputedStyle(root).getPropertyValue(`--theme-${key}`).trim()]));
+                current[input.dataset.themeColor] = input.value;
+                applyColors(current);
+                localStorage.setItem('afc-palette', 'custom');
+            }));
+            window.toggleAppTheme = () => {
+                if (root.dataset.theme !== 'light') {
+                    root.dataset.theme = 'light';
+                    root.dataset.palette = 'sage';
+                    applyColors(colors.sage);
+                } else {
+                    const current = palettes.includes(root.dataset.palette) ? root.dataset.palette : 'sage';
+                    root.dataset.palette = palettes[(palettes.indexOf(current) + 1) % palettes.length];
+                    applyColors(colors[root.dataset.palette]);
+                }
+                localStorage.setItem('afc-theme', root.dataset.theme);
+                localStorage.setItem('afc-palette', root.dataset.palette);
+                updateThemeButton();
+            };
+            function updateThemeButton() {
+                const button = document.getElementById('theme-toggle');
+                if (!button) return;
+                const light = document.documentElement.dataset.theme === 'light';
+                button.innerHTML = `${light ? '🎨' : '☀️'} <span>${light ? 'Theme colors · 7' : 'Theme / Giao diện'}</span>`;
+                button.title = light ? 'Edit the seven theme colors below' : 'Switch to light theme';
+                button.setAttribute('aria-label', button.title);
+            }
+            updateThemeButton();
+        })();
+    </script>
 </body>
 </html>

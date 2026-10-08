@@ -680,13 +680,13 @@ function updatePlannerGridBackground() {
     const zoom = _plannerSettings.viewport.zoom || 1;
 
     if (!g) {
-        canvas.style.backgroundImage = 'radial-gradient(#2a2a2a 1px, transparent 1px)';
+        canvas.style.backgroundImage = 'radial-gradient(var(--graph-grid-color) 1px, transparent 1px)';
         canvas.style.backgroundSize = '24px 24px';
     } else {
         const size = g * zoom;
         canvas.style.backgroundImage =
-            'linear-gradient(to right, rgba(255,255,255,0.07) 1px, transparent 1px), ' +
-            'linear-gradient(to bottom, rgba(255,255,255,0.07) 1px, transparent 1px)';
+            'linear-gradient(to right, var(--graph-grid-color) 1px, transparent 1px), ' +
+            'linear-gradient(to bottom, var(--graph-grid-color) 1px, transparent 1px)';
         canvas.style.backgroundSize = `${size}px ${size}px`;
     }
     canvas.style.backgroundPosition = `${_plannerSettings.viewport.x}px ${_plannerSettings.viewport.y}px`;

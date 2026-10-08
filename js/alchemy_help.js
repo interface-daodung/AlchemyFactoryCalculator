@@ -31,16 +31,16 @@ function _injectHelpStyles() {
         }
         .wiki-subnav {
             flex-shrink: 0; display: flex; gap: 6px;
-            padding: 7px 12px; border-bottom: 1px solid var(--border, #333);
+            padding: 7px 12px; border-bottom: 1px solid var(--border);
         }
         .wiki-tab-btn {
             padding: 3px 14px; border-radius: 4px;
-            border: 1px solid var(--border, #333); background: transparent;
-            color: var(--text-muted, #aaa); cursor: pointer;
+            border: 1px solid var(--border); background: transparent;
+            color: var(--muted); cursor: pointer;
             font-size: 1.0em; font-weight: 600;
         }
-        .wiki-tab-btn:hover  { background: var(--hover-bg, #1e2a3a); color: var(--text, #eee); }
-        .wiki-tab-btn.active { background: var(--accent-bg, #1e3a5f); border-color: var(--accent, #4af); color: var(--accent, #4af); }
+        .wiki-tab-btn:hover  { background: var(--panel); color: var(--text); }
+        .wiki-tab-btn.active { background: var(--accent); border-color: var(--accent); color: var(--panel); }
         #wiki-area {
             flex: 1; min-height: 0; overflow-y: auto;
             display: flex;
@@ -53,7 +53,7 @@ function _injectHelpStyles() {
         }
         .wiki-left-pane {
             box-sizing: border-box; flex: 3 1 75%; min-width: 50px;
-            border-right: 1px solid var(--border, #333);
+            border-right: 1px solid var(--border);
             display: flex; flex-direction: column; overflow: hidden;
         }
         .wiki-right-pane {
@@ -95,14 +95,14 @@ function _injectHelpStyles() {
             }
         }
 
-        .wiki-search-bar { flex-shrink: 0; padding: 7px 8px; border-bottom: 1px solid var(--border, #333); }
+        .wiki-search-bar { flex-shrink: 0; padding: 7px 8px; border-bottom: 1px solid var(--border); }
         .wiki-search-input {
             width: 100%; box-sizing: border-box; padding: 5px 8px;
-            background: var(--input-bg, #0d1a26); border: 1px solid var(--border, #333);
-            border-radius: 4px; color: var(--text, #eee); font-size: 0.8em; outline: none;
+            background: var(--bg); border: 1px solid var(--border);
+            border-radius: 4px; color: var(--text); font-size: 0.8em; outline: none;
         }
-        .wiki-search-input:focus { border-color: var(--accent, #4af); }
-        .wiki-placeholder { color: var(--text-muted, #555); font-size: 0.83em; padding-top: 48px; text-align: center; }
+        .wiki-search-input:focus { border-color: var(--accent); }
+        .wiki-placeholder { color: var(--muted); font-size: 0.83em; padding-top: 48px; text-align: center; }
 
         /* ── Item grid ── */
         .wiki-item-grid {
@@ -114,10 +114,10 @@ function _injectHelpStyles() {
             display: flex; flex-direction: column; align-items: center;
             padding: 6px 4px; border-radius: 4px; cursor: pointer;
             font-size: 0.8em; text-align: center; gap: 3px;
-            color: var(--text, #ddd); border: 1px solid transparent; user-select: none;
+            color: var(--text); border: 1px solid transparent; user-select: none;
         }
-        .wiki-tile:hover    { background: var(--hover-bg, #1e2a3a); }
-        .wiki-tile.selected { background: var(--accent-bg, #1a3050); border-color: var(--accent, #4af); }
+        .wiki-tile:hover    { background: var(--panel); }
+        .wiki-tile.selected { background: var(--accent); border-color: var(--accent); color: var(--panel); }
         .wiki-tile span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.3; }
         .wiki-icon { display: block; flex-shrink: 0; }
 
@@ -126,18 +126,18 @@ function _injectHelpStyles() {
         .machine-tile { flex-direction: row; justify-content: flex-start; text-align: left; font-size: 0.8em; padding: 7px 10px; }
 
         /* ── Detail ── */
-        .wiki-detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border, #333); }
+        .wiki-detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
         .wiki-detail-title-area { flex: 1; }
-        .wiki-detail-name { margin: 0 0 5px; font-size: 1.05em; font-weight: 700; color: var(--text, #eee); }
+        .wiki-detail-name { margin: 0 0 5px; font-size: 1.05em; font-weight: 700; color: var(--text); }
         .wiki-detail-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; }
         .wiki-badge { font-size: 0.7em; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
-        .wiki-badge.category { background: rgba(100,120,180,0.15); color: #8ab; border: 1px solid rgba(100,120,180,0.35); }
+        .wiki-badge.category { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); }
         .wiki-stats-grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 0.8em; }
-        .wiki-stat-key { color: var(--text-muted, #888); }
-        .wiki-stat-val { color: var(--text, #ddd); }
+        .wiki-stat-key { color: var(--muted); }
+        .wiki-stat-val { color: var(--text); }
         .wiki-section { margin-top: 14px; }
-        .wiki-section-title { font-size: 0.7em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted, #777); border-bottom: 1px solid var(--border, #2a3a4a); padding-bottom: 4px; margin-bottom: 7px; }
-        .wiki-empty { font-size: 0.78em; color: var(--text-muted, #555); margin: 4px 0; }
+        .wiki-section-title { font-size: 0.7em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 4px; margin-bottom: 7px; }
+        .wiki-empty { font-size: 0.78em; color: var(--muted); margin: 4px 0; }
 
         /* ── Recipe rows ── */
         .wiki-recipe-row {
@@ -145,89 +145,89 @@ function _injectHelpStyles() {
             padding: 4px 8px; border-radius: 4px; margin-bottom: 3px;
             border: 1px solid transparent; min-height: 30px;
         }
-        .wiki-recipe-row:hover { background: var(--hover-bg, #1e2a3a); }
-        .wiki-recipe-row.preferred { background: rgba(68,170,255,0.07); border-color: rgba(68,170,255,0.22); }
+        .wiki-recipe-row:hover { background: var(--panel); }
+        .wiki-recipe-row.preferred { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 12%, transparent); }
         .wiki-recipe-formula { flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 3px; min-width: 0; }
         .wiki-items { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; }
-        .wiki-arrow { color: var(--text-muted, #555); font-size: 0.85em; margin: 0 2px; flex-shrink: 0; }
+        .wiki-arrow { color: var(--muted); font-size: 0.85em; margin: 0 2px; flex-shrink: 0; }
         .wiki-recipe-item { display: inline-flex; align-items: center; gap: 1px; cursor: pointer; }
-        .wiki-item-qty { font-size: 0.7em; color: var(--accent, #7af); line-height: 1; }
+        .wiki-item-qty { font-size: 0.7em; color: var(--accent); line-height: 1; }
         .wiki-recipe-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; font-size: 0.78em; }
-        .wiki-recipe-machine { background: rgba(255,255,255,0.05); padding: 1px 5px; border-radius: 3px; cursor: pointer; }
+        .wiki-recipe-machine { background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 1px 5px; border-radius: 3px; cursor: pointer; }
 
         /* ── Star toggle ── */
-        .wiki-star { flex-shrink: 0; background: none; border: none; color: #555; cursor: pointer; font-size: 0.95em; padding: 0 2px; line-height: 1; }
-        .wiki-star:hover { color: #fa0; }
-        .wiki-star.active { color: #fa0; }
+        .wiki-star { flex-shrink: 0; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.95em; padding: 0 2px; line-height: 1; }
+        .wiki-star:hover { color: var(--accent); }
+        .wiki-star.active { color: var(--accent); }
         .wiki-star-ph { width: 18px; flex-shrink: 0; }
 
         /* ── Build cost ── */
         .wiki-build-cost { display: flex; flex-wrap: wrap; gap: 6px; }
-        .wiki-build-item { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--panel-bg, #1a2535); border: 1px solid var(--border, #2a3a4a); border-radius: 4px; font-size: 0.78em; cursor: pointer; }
-        .wiki-build-item:hover { border-color: var(--accent, #4af); }
+        .wiki-build-item { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; font-size: 0.78em; color: var(--text); cursor: pointer; }
+        .wiki-build-item:hover { border-color: var(--accent); }
 
         /* ── Chip filter bar ── */
         .wiki-chip-bar {
             flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 5px;
-            padding: 6px 8px; border-bottom: 1px solid var(--border, #333);
+            padding: 6px 8px; border-bottom: 1px solid var(--border);
         }
         .wiki-chip-wrap { position: relative; }
         .wiki-filter-chip {
             display: inline-flex; align-items: center; gap: 4px;
-            padding: 3px 10px; border: 1px solid var(--border, #444); border-radius: 12px;
-            background: transparent; color: var(--text-muted, #aaa);
+            padding: 3px 10px; border: 1px solid var(--border); border-radius: 12px;
+            background: transparent; color: var(--muted);
             font-size: 0.9em; cursor: pointer; white-space: nowrap; user-select: none;
             transition: border-color 0.15s, color 0.15s, background 0.15s;
         }
-        .wiki-filter-chip:hover  { border-color: #888; color: #eee; }
-        .wiki-filter-chip.active { background: rgba(76,175,80,0.12); border-color: var(--accent,#4caf50); color: var(--accent,#4caf50); }
-        .wiki-filter-chip.open   { border-color: #777; color: #ddd; background: rgba(255,255,255,0.04); }
+        .wiki-filter-chip:hover  { border-color: var(--muted); color: var(--text); }
+        .wiki-filter-chip.active { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: var(--accent); color: var(--accent); }
+        .wiki-filter-chip.open   { border-color: var(--muted); color: var(--text); background: color-mix(in srgb, var(--accent) 12%, transparent); }
         .chip-arrow { opacity: 0.5; font-size: 0.75em; }
         .chip-clear { opacity: 0.7; line-height: 1; }
         .chip-clear:hover { opacity: 1; }
 
         .wiki-chip-panel {
             position: absolute; top: calc(100% + 4px); left: 0; min-width: 160px;
-            background: #252525; border: 1px solid #555; border-radius: 6px;
-            padding: 6px; z-index: 300; box-shadow: 0 6px 18px rgba(0,0,0,0.55);
+            background: var(--panel); border: 1px solid var(--muted); border-radius: 6px;
+            padding: 6px; z-index: 300; box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 12%, transparent);
             display: flex; flex-wrap: wrap; gap: 4px;
         }
         .wiki-cat-btn {
-            padding: 3px 8px; border: 1px solid #444; border-radius: 4px;
-            background: transparent; color: #bbb; font-size: 0.8em;
+            padding: 3px 8px; border: 1px solid var(--border); border-radius: 4px;
+            background: transparent; color: var(--muted); font-size: 0.8em;
             cursor: pointer; white-space: nowrap; transition: 0.15s;
         }
-        .wiki-cat-btn:hover  { background: #333; color: #eee; border-color: #666; }
-        .wiki-cat-btn.active { background: rgba(76,175,80,0.12); border-color: var(--accent,#4caf50); color: var(--accent,#4caf50); }
+        .wiki-cat-btn:hover  { background: var(--border); color: var(--text); border-color: var(--muted); }
+        .wiki-cat-btn.active { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: var(--accent); color: var(--accent); }
 
         .wiki-chip-panel-num { flex-direction: column; min-width: 140px; gap: 6px; }
-        .chip-panel-row { display: flex; align-items: center; gap: 6px; font-size: 0.78em; color: #aaa; }
+        .chip-panel-row { display: flex; align-items: center; gap: 6px; font-size: 0.78em; color: var(--muted); }
         .chip-num-input {
-            flex: 1; padding: 3px 5px; background: #1a1a1a;
-            border: 1px solid #555; border-radius: 3px; color: #eee;
+            flex: 1; padding: 3px 5px; background: var(--bg);
+            border: 1px solid var(--muted); border-radius: 3px; color: var(--text);
             font-size: 0.85em; width: 70px; min-width: 30px;
             -moz-appearance: textfield; appearance: textfield;
         }
         .chip-num-input::-webkit-inner-spin-button,
         .chip-num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-        .chip-num-input:focus { outline: none; border-color: var(--accent,#4caf50); }
+        .chip-num-input:focus { outline: none; border-color: var(--accent); }
         .chip-exist-btn {
-            padding: 3px 8px; border: 1px solid #555; border-radius: 4px;
-            background: transparent; color: #aaa; font-size: 0.78em; cursor: pointer; transition: 0.15s;
+            padding: 3px 8px; border: 1px solid var(--muted); border-radius: 4px;
+            background: transparent; color: var(--muted); font-size: 0.78em; cursor: pointer; transition: 0.15s;
         }
-        .chip-exist-btn:hover  { border-color: #888; color: #eee; }
-        .chip-exist-btn.active { background: rgba(76,175,80,0.12); border-color: var(--accent,#4caf50); color: var(--accent,#4caf50); }
+        .chip-exist-btn:hover  { border-color: var(--muted); color: var(--text); }
+        .chip-exist-btn.active { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: var(--accent); color: var(--accent); }
 
         .wiki-active-filter-bar {
             display: flex; flex-wrap: wrap; align-items: center; gap: 5px;
-            padding: 5px 8px; border-bottom: 1px solid var(--border,#333);
-            background: rgba(76,175,80,0.03);
+            padding: 5px 8px; border-bottom: 1px solid var(--border);
+            background: color-mix(in srgb, var(--accent) 12%, transparent);
         }
         .wiki-active-chip {
             display: inline-flex; align-items: center; gap: 3px;
-            padding: 2px 8px; background: rgba(76,175,80,0.10);
-            border: 1px solid rgba(76,175,80,0.35); border-radius: 10px;
-            color: var(--accent,#4caf50); font-size: 0.74em;
+            padding: 2px 8px; background: color-mix(in srgb, var(--accent) 12%, transparent);
+            border: 1px solid color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 10px;
+            color: var(--accent); font-size: 0.74em;
         }
         .wiki-active-chip button {
             background: none; border: none; color: inherit; cursor: pointer;
@@ -235,14 +235,14 @@ function _injectHelpStyles() {
         }
         .wiki-active-chip button:hover { opacity: 1; }
         .chip-clear-all {
-            margin-left: auto; background: transparent; border: 1px solid #555;
-            border-radius: 4px; color: #888; font-size: 0.72em; cursor: pointer;
+            margin-left: auto; background: transparent; border: 1px solid var(--muted);
+            border-radius: 4px; color: var(--muted); font-size: 0.72em; cursor: pointer;
             padding: 2px 7px; transition: 0.15s;
         }
-        .chip-clear-all:hover { border-color: #888; color: #eee; }
+        .chip-clear-all:hover { border-color: var(--muted); color: var(--text); }
         .wiki-no-results {
             padding: 32px 16px; text-align: center;
-            color: var(--text-muted,#666); font-size: 0.82em; font-style: italic;
+            color: var(--muted); font-size: 0.82em; font-style: italic;
         }
 
         /* ── README / 完整說明 ── */
@@ -251,21 +251,21 @@ function _injectHelpStyles() {
         .wiki-readme-area { flex: 1; min-width: 0; overflow-y: auto; }
         .wiki-toc-sidebar {
             flex: 0 0 220px; width: 220px; overflow-y: auto;
-            border-left: 1px solid var(--border, #333);
-            padding: 16px 14px; box-sizing: border-box; background: var(--bg, #161616);
+            border-left: 1px solid var(--border);
+            padding: 16px 14px; box-sizing: border-box; background: var(--bg);
         }
         .wiki-toc-title {
             font-size: 0.72em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-            color: var(--text-muted, #777); margin-bottom: 8px;
+            color: var(--muted); margin-bottom: 8px;
         }
         .wiki-toc-list { display: flex; flex-direction: column; gap: 2px; }
         .wiki-toc-link {
             display: block; padding: 4px 8px; border-radius: 4px;
-            font-size: 0.82em; color: var(--text-muted, #999); text-decoration: none;
+            font-size: 0.82em; color: var(--muted); text-decoration: none;
             border-left: 2px solid transparent; line-height: 1.4;
         }
-        .wiki-toc-link:hover { color: var(--text, #eee); background: var(--hover-bg, #1e2a3a); }
-        .wiki-toc-link.active { color: var(--accent, #4caf50); border-left-color: var(--accent, #4caf50); background: rgba(76,175,80,0.08); font-weight: 600; }
+        .wiki-toc-link:hover { color: var(--text); background: var(--panel); }
+        .wiki-toc-link.active { color: var(--accent); border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); font-weight: 600; }
         .wiki-toc-level-3 { padding-left: 20px; font-size: 0.78em; }
 
         .wiki-toc-mobile-btn { display: none; }
@@ -275,7 +275,7 @@ function _injectHelpStyles() {
             .wiki-toc-sidebar {
                 position: absolute; top: 0; right: 0; bottom: 0; z-index: 400;
                 width: 240px; flex: none;
-                box-shadow: -4px 0 14px rgba(0,0,0,0.4);
+                box-shadow: -4px 0 14px color-mix(in srgb, var(--accent) 12%, transparent);
                 transform: translateX(100%); transition: transform 0.25s ease;
             }
             .wiki-toc-sidebar.open { transform: translateX(0); }
@@ -283,40 +283,40 @@ function _injectHelpStyles() {
                 display: flex; align-items: center; justify-content: center;
                 position: absolute; right: 14px; bottom: 14px; z-index: 401;
                 width: 42px; height: 42px; border-radius: 50%;
-                background: var(--accent, #4caf50); color: #fff; border: none;
-                font-size: 1.1em; cursor: pointer; box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+                background: var(--accent); color: var(--panel); border: none;
+                font-size: 1.1em; cursor: pointer; box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 12%, transparent);
             }
             .wiki-toc-overlay {
                 display: block; position: absolute; inset: 0; z-index: 399;
-                background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: opacity 0.2s;
+                background: color-mix(in srgb, var(--accent) 12%, transparent); opacity: 0; pointer-events: none; transition: opacity 0.2s;
             }
             .wiki-toc-overlay.open { opacity: 1; pointer-events: auto; }
         }
 
-        .md-container { max-width: 900px; margin: 0 auto; padding: 20px 24px 60px; font-size: 0.86em; line-height: 1.7; color: var(--text, #ddd); }
+        .md-container { max-width: 900px; margin: 0 auto; padding: 20px 24px 60px; font-size: 0.86em; line-height: 1.7; color: var(--text); }
         .md-container h1, .md-container h2, .md-container h3, .md-container h4 {
-            color: var(--text, #eee); margin: 26px 0 12px; font-weight: 700;
+            color: var(--text); margin: 26px 0 12px; font-weight: 700;
         }
-        .md-container h1 { font-size: 1.5em; border-bottom: 1px solid var(--border, #333); padding-bottom: 8px; }
-        .md-container h2 { font-size: 1.25em; border-bottom: 1px solid var(--border, #333); padding-bottom: 6px; margin-top: 34px; }
+        .md-container h1 { font-size: 1.5em; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+        .md-container h2 { font-size: 1.25em; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-top: 34px; }
         .md-container h3 { font-size: 1.08em; }
-        .md-container h4 { font-size: 0.98em; color: var(--text-muted, #bbb); }
+        .md-container h4 { font-size: 0.98em; color: var(--muted); }
         .md-container p { margin: 10px 0; }
-        .md-container a { color: var(--accent, #4af); text-decoration: none; }
+        .md-container a { color: var(--accent); text-decoration: none; }
         .md-container a:hover { text-decoration: underline; }
-        .md-container code { background: rgba(0,0,0,0.3); padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 0.92em; color: var(--accent, #7af); }
-        .md-container pre { background: rgba(0,0,0,0.35); border: 1px solid var(--border, #2a3a4a); border-radius: 6px; padding: 10px 12px; overflow-x: auto; margin: 12px 0; }
-        .md-container pre code { background: none; padding: 0; color: var(--text, #ddd); }
+        .md-container code { background: color-mix(in srgb, var(--accent) 12%, transparent); padding: 2px 5px; border-radius: 3px; font-family: monospace; font-size: 0.92em; color: var(--accent); }
+        .md-container pre { background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; overflow-x: auto; margin: 12px 0; }
+        .md-container pre code { background: none; padding: 0; color: var(--text); }
         .md-container ul, .md-container ol { margin: 8px 0; padding-left: 26px; }
         .md-container li { margin-bottom: 4px; }
-        .md-container blockquote { border-left: 3px solid var(--accent, #4af); margin: 12px 0; padding: 4px 14px; color: var(--text-muted, #aaa); background: rgba(255,255,255,0.03); }
-        .md-container hr { border: none; border-top: 1px solid var(--border, #333); margin: 24px 0; }
+        .md-container blockquote { border-left: 3px solid var(--accent); margin: 12px 0; padding: 4px 14px; color: var(--muted); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+        .md-container hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
         .md-container table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 0.95em; }
-        .md-container th, .md-container td { border: 1px solid var(--border, #2a3a4a); padding: 6px 10px; text-align: left; }
-        .md-container th { background: var(--panel-bg, #1a2535); color: var(--text, #eee); }
-        .md-container tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-        .md-loading, .md-error { padding: 40px 16px; text-align: center; color: var(--text-muted, #666); font-size: 0.9em; }
-        .md-error { color: #e77; }
+        .md-container th, .md-container td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+        .md-container th { background: var(--panel); color: var(--text); }
+        .md-container tr:nth-child(even) td { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+        .md-loading, .md-error { padding: 40px 16px; text-align: center; color: var(--muted); font-size: 0.9em; }
+        .md-error { color: var(--accent); }
     `;
     document.head.appendChild(s);
 }
@@ -628,9 +628,9 @@ function _buildChipPanelHTML(target, key, cats) {
                 + 'onclick="_setTierQuick(\'' + target + '\',' + t + ')">' + t + '</button>';
         }
         return '<div class="wiki-chip-panel" style="min-width:190px;">'
-            + '<div style="width:100%; font-size:0.72em; color:#777; margin-bottom:2px;">' + _tn('Quick select (exact)') + '</div>'
+            + '<div style="width:100%; font-size:0.72em; color:var(--muted); margin-bottom:2px;">' + _tn('Quick select (exact)') + '</div>'
             + tierBtns
-            + '<div style="width:100%; height:1px; background:#333; margin:4px 0;"></div>'
+            + '<div style="width:100%; height:1px; background:var(--border); margin:4px 0;"></div>'
             + '<label class="chip-panel-row"><span>Min</span>'
             + '<input type="number" class="chip-num-input" value="' + (f.min || '') + '" placeholder="1" min="1" max="9" style="width:30px; height:30px;"'
             + 'oninput="_onChipNum(\'' + target + '\',\'tier\',\'min\',this.value)"></label>'
@@ -831,7 +831,7 @@ function _renderItemDetail(itemName) {
         : producers.map(function(recipe) {
             var isPreferred = preferred === recipe.id;
             var hasIn   = Object.keys(recipe.inputs  || {}).length > 0;
-            var inHTML  = hasIn ? _fmtItems(recipe.inputs) : '<em style="font-size:0.78em;color:#666">—</em>';
+            var inHTML  = hasIn ? _fmtItems(recipe.inputs) : '<em style="font-size:0.78em;color:var(--muted)">—</em>';
             var outHTML = _fmtItems(recipe.outputs || {});
             return '<div class="wiki-recipe-row' + (isPreferred ? ' preferred' : '') + '">'
                 + '<div class="wiki-recipe-formula">'
@@ -1032,7 +1032,7 @@ function _renderMachineDetail(machineName) {
         : recipes.map(function(recipe) {
             var inHTML = Object.keys(recipe.inputs || {}).length > 0
                 ? _fmtItems(recipe.inputs)
-                : '<em style="font-size:0.78em;color:#666">—</em>';
+                : '<em style="font-size:0.78em;color:var(--muted)">—</em>';
             var outHTML = _fmtItems(recipe.outputs || {});
             return '<div class="wiki-recipe-row">'
                 + '<div class="wiki-recipe-formula">'
@@ -1452,7 +1452,7 @@ function _renderContractsTable() {
 function _buildContractsAreaHTML() {
     var settings = DB.settings || {};
     return '<div class="md-container" style="max-width:1100px; width:100%; box-sizing:border-box;">'
-        + '<div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; background:#252525; padding:12px; border-radius:6px;">'
+        + '<div class="wiki-contract-controls" style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; padding:12px;">'
         + '<div class="input-group" style="flex:1; min-width:180px;">'
         + '<label>' + _tn('Working Hours / Day') + '</label>'
         + '<input type="number" class="small-num-input" style="width:100%;" value="' + (settings.contractWorkMinutes ?? 16) + '" min="16" max="24" onchange="onContractParamChange(\'contractWorkMinutes\', this.value)">'

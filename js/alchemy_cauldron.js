@@ -413,7 +413,7 @@ function _renderItemBaseCostList() {
     entries.sort((a, b) => a[1] - b[1]); // 依估算價值低到高
 
     if (entries.length === 0) {
-        container.innerHTML = `<div style="color:#666; padding:10px; font-size:0.85em; text-align:center;">${t('No items found.', 'ui')}</div>`;
+        container.innerHTML = `<div style="color:var(--muted); padding:10px; font-size:0.85em; text-align:center;">${t('No items found.', 'ui')}</div>`;
         return;
     }
 

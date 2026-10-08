@@ -672,7 +672,7 @@ function renderCommonNodesSection(treeContainer, params, commonNodes) {
                 ${heatTag}
                 ${bioTag}
             </div>
-            <div class="node-children" style="margin-left: 20px; border-left: 1px solid #444;">${childrenHtml}</div>
+            <div class="node-children node-children-indented">${childrenHtml}</div>
         `;
         treeContainer.appendChild(div);
     });
@@ -692,7 +692,7 @@ function renderExternalInputsSection(treeContainer, params, externalInputs) {
                 ${mainIconHtml}
                 <strong>${label}</strong>
             </div>
-            <div class="node-children" style="margin-left: 20px; border-left: 1px solid #444;">${producersHtml}</div>
+            <div class="node-children node-children-indented">${producersHtml}</div>
         `;
         treeContainer.appendChild(div);
     }
@@ -829,7 +829,7 @@ function renderByproductsSection(treeContainer, params, byproducts) {
                 ${machineLabel}
                 ${recycledNote}
             </div>
-            <div class="node-children" style="margin-left: 20px; border-left: 1px solid #444;">${childrenHtml}</div>
+            <div class="node-children node-children-indented">${childrenHtml}</div>
         `;
         treeContainer.appendChild(div);
     });
