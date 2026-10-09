@@ -5,7 +5,7 @@
 Công cụ tính toán kế hoạch sản xuất trên trình duyệt cho trò chơi **Alchemy Factory**.
 Tính toán chính xác tiêu hao nguyên liệu, số lượng máy, tải nhiệt/dinh dưỡng và lợi nhuận cho bất kỳ chuỗi sản xuất nào.
 
-**Phiên bản trực tuyến:** [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator)
+**Phiên bản trực tuyến:** [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/)
 
 ---
 
@@ -30,7 +30,7 @@ Tính toán chính xác tiêu hao nguyên liệu, số lượng máy, tải nhi�
 ## 🚀 Bắt Đầu Nhanh
 
 #### Trực tuyến
-Mở [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator) trong bất kỳ trình duyệt hiện đại nào. Không cần cài đặt.
+Mở [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/) trong bất kỳ trình duyệt hiện đại nào. Không cần cài đặt.
 
 #### Cục bộ
 1. Tải xuống hoặc clone kho lưu trữ này.

@@ -412,7 +412,7 @@ function renderPlannerNodeModalBody(nodeId) {
         </div>
         <div style="height:1px; background:var(--border); margin:12px 0;"></div>
                 <div class="planner-recipe-switch-section">
-            <div style="font-size:0.78em; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">
+            <div style="font-size:0.78em; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">
                 ${t('Select Recipe', 'ui')}
             </div>
             <div class="planner-picker-list" style="max-height:240px; overflow-y:auto; padding:0;">
@@ -435,7 +435,7 @@ function renderPlannerNodeModalBody(nodeId) {
         ${_buildPlannerNodeMismatchSectionHtml(node, flows)}
         <div style="height:1px; background:var(--border); margin:12px 0;"></div>
         <div class="planner-node-actions-section" style="display:flex; flex-direction:column; gap:6px;">
-            <div style="font-size:0.78em; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">
+            <div style="font-size:0.78em; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">
                 ${t('Graph Tools', 'ui')}
             </div>
             <button class="split-btn" style="width:100%;" onclick="plannerSelectAllUpstreamNodes('${node.id}')">
@@ -494,7 +494,7 @@ function _buildPlannerNodeModifierHtml(node, rawRecipe) {
         }
         controlsHtml = `
             <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); display:flex; align-items:center; gap:8px;">
-                <span style="font-size:0.82em; color:#aaa;">${t('Input')}:</span>
+                <span style="font-size:0.82em; color:var(--muted);">${t('Input')}:</span>
                 <span class="mini-picker" style="display:inline-flex; align-items:center; gap:4px;" onclick="plannerPickCustomInput('${node.id}')">
                     ${inputDef ? `<img src="img/item${inputDef.id ?? 0}.png" width="18" height="18">` : ''}
                     <span>${selectedItem ? selectedItem : t('Select Input Item')}</span>
@@ -524,10 +524,10 @@ function _buildPlannerNodeModifierHtml(node, rawRecipe) {
 
     return `
         <div>
-            <div style="font-weight:bold; color:#eee; margin-bottom:8px;">${t(rawRecipe.machine, 'machines')} ( ${rawRecipe.baseTime} sec )</div>
+            <div style="font-weight:bold; color:var(--text); margin-bottom:8px;">${t(rawRecipe.machine, 'machines')} ( ${rawRecipe.baseTime} sec )</div>
             <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
-                <span style="display:flex; flex-wrap:wrap; gap:4px;">${inputsHtml || `<em style="font-size:0.8em;color:#666;">—</em>`}</span>
-                <span style="color:#666; margin:0 4px;">→</span>
+                <span style="display:flex; flex-wrap:wrap; gap:4px;">${inputsHtml || `<em style="font-size:0.8em;color:var(--muted);">—</em>`}</span>
+                <span style="color:var(--muted); margin:0 4px;">→</span>
                 <span style="display:flex; flex-wrap:wrap; gap:4px;">${outputsHtml}</span>
             </div>
             ${controlsHtml}
@@ -753,15 +753,15 @@ function _buildPlannerNodeMismatchSectionHtml(node, flows) {
     return `
         <div style="height:1px; background:var(--border); margin:12px 0;"></div>
         <div class="planner-mismatch-section">
-            <div style="font-size:0.78em; color:#888; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">
+            <div style="font-size:0.78em; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">
                 ${t('Port Balance', 'ui')}
             </div>
             <div style="display:flex; gap:10px;">
                 <div style="flex:1; display:flex; flex-direction:column; gap:4px; min-width:0;">${inputsHtml}</div>
                 <div style="flex:1; display:flex; flex-direction:column; gap:4px; min-width:0;">${outputsHtml}</div>
             </div>
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:6px; border-top:1px dashed var(--border); font-size:0.82em; color:#aaa;">
-                <span>${t('Machine Count', 'ui')}: <strong style="color:#eee;">${Number(node.machineCount.toFixed(4))}</strong></span>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding-top:6px; border-top:1px dashed var(--border); font-size:0.82em; color:var(--muted);">
+                <span>${t('Machine Count', 'ui')}: <strong style="color:var(--text);">${Number(node.machineCount.toFixed(4))}</strong></span>
                 <span id="planner-mismatch-mc-preview-${node.id}" style="font-weight:bold;"></span>
             </div>
         </div>`;
@@ -862,11 +862,11 @@ function openPlannerEdgeModal(edgeId) {
                 <span>${t('Set Flow', 'ui')}:</span>
                 <input type="number" min="0" step="any" id="planner-edge-flow-input"
                        value="${Number(flow.toFixed(4))}"
-                       style="flex:1; padding:5px 8px; background:#2a2a2a; border:1px solid #555; border-radius:4px; color:#fff;"
+                       style="flex:1; padding:5px 8px; background:var(--panel); border:1px solid var(--border); border-radius:4px; color:var(--text);"
                        onchange="plannerApplyEdgeFlowInput('${edgeId}', this)">
                 <span>/min</span>
             </div>
-            <div style="display:flex; align-items:center; gap:6px; font-size:1em; color:#999; font-style:italic;">
+            <div style="display:flex; align-items:center; gap:6px; font-size:1em; color:var(--muted); font-style:italic;">
                 <button class="planner-link-btn ${_plannerLinkMode ? 'active' : ''}"
                         onclick="togglePlannerLinkMode(); openPlannerEdgeModal('${edgeId}');"
                         title="${t('Link machine count changes', 'ui')}">
@@ -1300,40 +1300,40 @@ function _injectPlannerSummaryStyles() {
         }
         .planner-summary-panel.collapsed { width: auto; background: transparent; border: none; box-shadow: none; }
         .planner-summary-min-btn {
-            background: rgba(26,26,26,0.95); border: 1px solid var(--border,#444); color: #ddd;
+            background: rgba(26,26,26,0.95); border: 1px solid var(--border,#444); color: var(--text);
             border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: 0.95em;
             box-shadow: 0 4px 14px rgba(0,0,0,0.45);
         }
-        .planner-summary-min-btn:hover { border-color: var(--accent); color: #fff; }
+        .planner-summary-min-btn:hover { border-color: var(--accent); color: var(--text); }
         .planner-summary-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 8px 10px; border-bottom: 1px solid var(--border,#444);
             flex-shrink: 0; background: #202020; cursor: pointer;
         }
-        .planner-summary-title { font-weight: bold; color: #eee; letter-spacing: 0.03em; text-transform: uppercase; font-size: 0.85em; }
-        .planner-summary-close-btn:hover { color: #fff; }
+        .planner-summary-title { font-weight: bold; color: var(--text); letter-spacing: 0.03em; text-transform: uppercase; font-size: 0.85em; }
+        .planner-summary-close-btn:hover { color: var(--text); }
         .planner-summary-body { overflow-y: auto; padding: 4px 0; }
         .planner-summary-section { border-bottom: 1px solid #2e2e2e; }
         .planner-summary-section:last-child { border-bottom: none; }
         .planner-summary-section-header {
             display: flex; align-items: center; gap: 6px;
             padding: 7px 10px; cursor: pointer; user-select: none;
-            color: #ccc; font-weight: bold;
+            color: var(--text); font-weight: bold;
         }
         .planner-summary-section-header:hover { background: #262626; }
-        .planner-summary-arrow { font-size: 0.75em; color: #888; width: 10px; flex-shrink: 0; }
+        .planner-summary-arrow { font-size: 0.75em; color: var(--muted); width: 10px; flex-shrink: 0; }
         .planner-summary-count {
-            margin-left: auto; background: #333; color: #aaa; border-radius: 8px;
+            margin-left: auto; background: var(--panel); color: var(--muted); border-radius: 8px;
             padding: 0 7px; font-size: 0.8em; font-weight: normal;
         }
         .planner-summary-section-body { padding: 2px 10px 8px 10px; }
         .planner-summary-row {
             display: flex; align-items: center; gap: 6px;
-            padding: 3px 0; font-size: 0.95em; color: #ddd;
+            padding: 3px 0; font-size: 0.95em; color: var(--text);
         }
         .planner-summary-row span:nth-child(2) { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .planner-summary-val { font-weight: bold; flex-shrink: 0; }
-        .planner-summary-empty { color: #666; font-style: italic; font-size: 0.9em; padding: 2px 0; }
+        .planner-summary-empty { color: var(--muted); font-style: italic; font-size: 0.9em; padding: 2px 0; }
     `;
     document.head.appendChild(s);
 }

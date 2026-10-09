@@ -12,7 +12,7 @@ en: `[EN](README.md) | [Tiếng Việt](README.vi.md)
 A browser-based production planning tool for the game **Alchemy Factory**.
 Precisely calculates raw material consumption, machine counts, heat/nutrient loads, and profitability for any production chain.
 
-**Live version:** [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator)
+**Live version:** [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/)
 
 ---
 
@@ -37,7 +37,7 @@ Precisely calculates raw material consumption, machine counts, heat/nutrient loa
 ## 🚀 Getting Started
 
 #### Online
-Open [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator) in any modern browser. No installation required.
+Open [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/) in any modern browser. No installation required.
 
 #### Local
 1. Download or clone this repository.
@@ -211,7 +211,7 @@ A node can also reference an entire other plan as a **module**: it exposes that 
 
 Select a group of nodes and click **📦 Encapsulate** to create a new plan from the selection and replace it with a module node. The internal connections are retained inside the new module.
 
-Use **🔀 Optimize Port Order** in the lower-right canvas controls to optimize all port orders; dropping a node also performs a single-node port-order optimization.
+Dropping a node performs a single-node port-order optimization.
 
 ### Portal Nodes
 
@@ -460,7 +460,7 @@ vi: `[English](README.md) | [Tiếng Việt](README.vi.md)
 Công cụ tính toán kế hoạch sản xuất trên trình duyệt cho trò chơi **Alchemy Factory**.
 Tính toán chính xác tiêu hao nguyên liệu, số lượng máy, tải nhiệt/dinh dưỡng và lợi nhuận cho bất kỳ chuỗi sản xuất nào.
 
-**Phiên bản trực tuyến:** [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator)
+**Phiên bản trực tuyến:** [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/)
 
 ---
 
@@ -485,7 +485,7 @@ Tính toán chính xác tiêu hao nguyên liệu, số lượng máy, tải nhi�
 ## 🚀 Bắt Đầu Nhanh
 
 #### Trực tuyến
-Mở [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator) trong bất kỳ trình duyệt hiện đại nào. Không cần cài đặt.
+Mở [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/) trong bất kỳ trình duyệt hiện đại nào. Không cần cài đặt.
 
 #### Cục bộ
 1. Tải xuống hoặc clone kho lưu trữ này.

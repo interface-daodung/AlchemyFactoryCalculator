@@ -414,26 +414,69 @@ function saveMultiTargets(e) {
         }
     });
     if (targets.length === 0) {
-        console.log(t("List is empty, nothing to save.", "ui"));
+        alert(t("List is empty, nothing to save.", "ui"));
         return;
     }
-    DB.settings.multiTargets = targets;
-    persist();
+    const payload = { format: 'AFC_MULTI_TARGETS', version: 1, targets };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `alchemy_list_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
     if(e?.currentTarget) flashButton(e.currentTarget);
 }
 
-function loadMultiTargets(e) {
-    if (!DB.settings.multiTargets || DB.settings.multiTargets.length === 0) {
-        console.log(t("No saved list found.", "ui"));
-        return;
+function openMultiTargetsFilePicker() {
+    const input = document.getElementById('multi-target-file-input');
+    if (input) input.click();
+}
+
+async function loadMultiTargetsFile(input) {
+    const file = input?.files?.[0];
+    if (!file) return;
+    try {
+        const parsed = JSON.parse(await file.text());
+        const targets = Array.isArray(parsed) ? parsed : parsed?.targets;
+        if (!Array.isArray(targets) || targets.length === 0 || targets.some(target =>
+            !target || typeof target.item !== 'string' || !target.item || !Number.isFinite(Number(target.rate)))) {
+            throw new Error('Invalid list file');
+        }
+        renderMultiTargetsFromFile(targets);
+    } catch (error) {
+        console.error('Failed to load multi-target list.', error);
+        alert(t('Invalid or unsupported list file.', 'ui'));
+    } finally {
+        input.value = '';
     }
+}
+
+function renderMultiTargetsFromFile(targets) {
     const container = document.getElementById('multi-target-list');
-    container.innerHTML = ''; // 清空目前清單
-    DB.settings.multiTargets.forEach(target => {
-        addMultiTargetRow(target.item, target.rate);
+    container.innerHTML = '';
+    targets.forEach(target => {
+        addMultiTargetRow(target.item, Number(target.rate));
     });
-    calculate(); // 重新計算
-    flashButton(e.currentTarget);
+    const modeToggle = document.getElementById('modeToggle');
+    if (modeToggle && !modeToggle.checked) {
+        modeToggle.checked = true;
+        document.getElementById('single-target-ui').style.display = 'none';
+        document.getElementById('multi-target-ui').style.display = 'block';
+    }
+    calculate();
+}
+
+// Keep restoring the browser's last working targets when entering multi-target mode.
+// The explicit Save/Load List buttons now use portable text files.
+function loadMultiTargets() {
+    const targets = DB.settings.multiTargets;
+    if (!Array.isArray(targets) || targets.length === 0) return;
+    const container = document.getElementById('multi-target-list');
+    container.innerHTML = '';
+    targets.forEach(target => addMultiTargetRow(target.item, target.rate));
 }
 
 /** Add current fuel/fertilizer demand to their production targets. */
@@ -652,15 +695,18 @@ function cacheRecentProductionPlan(payload) {
 }
 
 function renderRecentProductionPlans(selectedId = '') {
-    const select = document.getElementById('recent-production-plans');
-    if (!select) return;
-    select.replaceChildren(new Option(t('Recent plans', 'ui'), ''));
-    readRecentProductionPlans().forEach(entry => {
-        const when = new Date(entry.usedAt);
-        const timeLabel = Number.isNaN(when.getTime()) ? '' : ` — ${when.toLocaleString()}`;
-        select.appendChild(new Option(`${entry.name}${timeLabel}`, entry.id));
+    const selects = document.querySelectorAll('.production-plan-recent-select');
+    if (!selects.length) return;
+    const entries = readRecentProductionPlans();
+    selects.forEach(select => {
+        select.replaceChildren(new Option(t('Recent plans', 'ui'), ''));
+        entries.forEach(entry => {
+            const when = new Date(entry.usedAt);
+            const timeLabel = Number.isNaN(when.getTime()) ? '' : ` — ${when.toLocaleString()}`;
+            select.appendChild(new Option(`${entry.name}${timeLabel}`, entry.id));
+        });
+        select.value = selectedId;
     });
-    select.value = selectedId;
 }
 
 function isValidProductionPlanPayload(payload) {

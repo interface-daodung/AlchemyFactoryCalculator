@@ -9,10 +9,10 @@
     <meta name="keywords" content="Alchemy Factory,Máy tính nhà máy giả kim,tính toán,định lượng,lập kế hoạch công thức,vạc hắc kim,đồ thị nút,production planner,cauldron calculator">
 
     <!-- Liên kết chuẩn: trỏ tới bản chính thức trực tuyến -->
-    <link rel="canonical" href="https://starfi5h.github.io/AlchemyFactoryCalculator/?lang=en">
-    <link rel="alternate" hreflang="en" href="https://starfi5h.github.io/AlchemyFactoryCalculator/?lang=en">
-    <link rel="alternate" hreflang="vi" href="https://starfi5h.github.io/AlchemyFactoryCalculator/">
-    <link rel="alternate" hreflang="x-default" href="https://starfi5h.github.io/AlchemyFactoryCalculator/?lang=en">
+    <link rel="canonical" href="https://interface-daodung.github.io/AlchemyFactoryCalculator/?lang=en">
+    <link rel="alternate" hreflang="en" href="https://interface-daodung.github.io/AlchemyFactoryCalculator/?lang=en">
+    <link rel="alternate" hreflang="vi" href="https://interface-daodung.github.io/AlchemyFactoryCalculator/">
+    <link rel="alternate" hreflang="x-default" href="https://interface-daodung.github.io/AlchemyFactoryCalculator/?lang=en">
 
     <!-- 语言与地区 -->    
     <meta name="language" content="vi,en">    
@@ -20,7 +20,7 @@
     <meta name="google-site-verification" content="Gbhje5wyjBUz1rX9VYaQu27t4Si94B66rX1klgSbwqg" />
 
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://starfi5h.github.io/AlchemyFactoryCalculator/?lang=en">
+    <meta property="og:url" content="https://interface-daodung.github.io/AlchemyFactoryCalculator/?lang=en">
     <meta property="og:title" content="Alchemy Factory Calculator">
     <meta property="og:description" content="">
 
@@ -34,9 +34,9 @@
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "Web",
         "browserRequirements": "Modern browser with JavaScript enabled",
-        "url": "https://starfi5h.github.io/AlchemyFactoryCalculator/?lang=en",
+        "url": "https://interface-daodung.github.io/AlchemyFactoryCalculator/?lang=en",
         "sameAs": [
-            "https://github.com/starfi5h/AlchemyFactoryCalculator"
+            "https://github.com/interface-daodung/AlchemyFactoryCalculator"
         ],
         "inLanguage": ["vi", "en"]
     }
@@ -47,6 +47,7 @@
     <script src="js/alchemy_i18n.js"></script>    
     <script src="js/alchemy_state.js"></script>
     <link rel="stylesheet" href="style.css">    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
 
 </head>
@@ -78,7 +79,7 @@
     </header>
 
     <button id="upgrades-drawer-trigger" class="upgrades-drawer-trigger" type="button"
-        onclick="openAppDrawer('upgrades')" title="Upgrades" aria-label="Upgrades">⬆</button>
+        onclick="openAppDrawer('upgrades')" title="Upgrades" aria-label="Upgrades"><i class="fa-solid fa-screwdriver-wrench" aria-hidden="true"></i></button>
 
     <div id="app-drawer-backdrop" class="app-drawer-backdrop" hidden onclick="closeAppDrawers()"></div>
 
@@ -169,20 +170,8 @@
         </div>
         <div class="app-sidepane-body settings-sidepane-body">
             <button id="ui-lang-toggle" class="settings-action-btn" type="button" onclick="toggleLanguage()" title="EN/Tiếng Việt">🌐 EN / Tiếng Việt</button>
-            <button id="theme-toggle" class="settings-action-btn theme-toggle-btn" type="button" onclick="toggleAppTheme()" title="Switch to light theme" aria-label="Switch to light theme">☀️ <span>Theme / Giao diện</span></button>
-            <section class="theme-color-settings" aria-labelledby="theme-color-title">
-                <h3 id="theme-color-title">Theme colors · 7 color system</h3>
-                <div class="theme-color-grid">
-                    <label>Background<input type="color" data-theme-color="bg"></label>
-                    <label>Surface<input type="color" data-theme-color="surface"></label>
-                    <label>Text<input type="color" data-theme-color="text"></label>
-                    <label>Primary<input type="color" data-theme-color="primary"></label>
-                    <label>Secondary<input type="color" data-theme-color="secondary"></label>
-                    <label>Border<input type="color" data-theme-color="border"></label>
-                    <label>Muted text<input type="color" data-theme-color="muted"></label>
-                </div>
-            </section>
-            <a href="https://github.com/starfi5h/AlchemyFactoryCalculator" target="_blank" rel="noopener" class="settings-action-btn settings-link-btn">↗ GitHub Repo</a>
+            <button id="theme-settings-trigger" class="settings-action-btn" type="button" onclick="openThemeColorPopup()" title="Theme colors" aria-label="Theme colors"><i class="fa-solid fa-palette" aria-hidden="true"></i><span>Theme / Màu giao diện</span></button>
+            <a href="https://github.com/interface-daodung/AlchemyFactoryCalculator" target="_blank" rel="noopener" class="settings-action-btn settings-link-btn"><i class="fa-brands fa-github" aria-hidden="true"></i><span>GitHub Repo</span></a>
             <div class="settings-meta-row"><span>Last updated</span><strong id="last-updated-time-text">2026.09.25</strong></div>
             <div class="settings-meta-row"><span>Game version</span><strong id="db-gameversion-text"></strong></div>
             <div class="app-sidepane-divider"></div>
@@ -192,6 +181,33 @@
             <button class="reset-btn danger-action" onclick="resetAllData()">All Data Reset</button>
         </div>
     </aside>
+
+    <div id="theme-color-modal" class="modal-overlay theme-color-modal" onclick="closeModal('theme-color-modal')">
+        <section class="modal-content theme-color-modal-content" role="dialog" aria-modal="true" aria-labelledby="theme-color-title" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h2 id="theme-color-title">Theme colors</h2>
+                    <p>Chọn preset hoặc chỉnh trực tiếp 7 màu giao diện.</p>
+                </div>
+                <button class="close-modal" type="button" onclick="closeModal('theme-color-modal')" aria-label="Close">&times;</button>
+            </div>
+            <div class="theme-color-settings">
+                <div class="theme-preset-row" aria-label="Theme presets">
+                    <button type="button" class="theme-preset-btn" data-theme-preset="cream" onclick="applyThemePreset('cream')">Kem sáng</button>
+                    <button type="button" class="theme-preset-btn" data-theme-preset="charcoal" onclick="applyThemePreset('charcoal')">Đen xám đậm</button>
+                </div>
+                <div class="theme-color-grid">
+                    <label for="theme-color-bg"><span>Background</span><input id="theme-color-bg" type="color" data-theme-color="bg"></label>
+                    <label for="theme-color-surface"><span>Surface</span><input id="theme-color-surface" type="color" data-theme-color="surface"></label>
+                    <label for="theme-color-text"><span>Text / Màu chữ</span><input id="theme-color-text" type="color" data-theme-color="text"></label>
+                    <label for="theme-color-primary"><span>Primary / Chữ chủ đề</span><input id="theme-color-primary" type="color" data-theme-color="primary"></label>
+                    <label for="theme-color-secondary"><span>Secondary</span><input id="theme-color-secondary" type="color" data-theme-color="secondary"></label>
+                    <label for="theme-color-border"><span>Border</span><input id="theme-color-border" type="color" data-theme-color="border"></label>
+                    <label for="theme-color-muted"><span>Muted text</span><input id="theme-color-muted" type="color" data-theme-color="muted"></label>
+                </div>
+            </div>
+        </section>
+    </div>
 
     <main>
         <div id="recipe-modal" class="modal-overlay" onclick="closeModal('recipe-modal')">
@@ -466,6 +482,24 @@
                                 </div>
                             </div>
 
+                            <div class="production-plan-actions">
+                                <select id="recent-production-plans" class="production-plan-recent-select"
+                                    onchange="loadRecentProductionPlan(this.value)" title="Switch to a recently used plan"
+                                    aria-label="Recent plans">
+                                    <option value="">Recent plans</option>
+                                </select>
+                                <button id="load-production-plan-btn" class="split-btn production-plan-action-btn" type="button"
+                                    onclick="openProductionPlanFilePicker()" title="Load a saved plan file">
+                                    <i class="fa-solid fa-folder-open" aria-hidden="true"></i> Load Plan
+                                </button>
+                                <button id="save-production-plan-btn" class="split-btn production-plan-action-btn" type="button"
+                                    onclick="downloadCompressedProductionPlan(this)" title="Save the current plan as compressed Base64 text">
+                                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save Plan
+                                </button>
+                                <input id="production-plan-file-input" type="file" accept=".txt,text/plain" hidden
+                                    onchange="loadProductionPlanFile(this)">
+                            </div>
+
                         </div>
 
                         <!-- 多產物 UI (預設隱藏) -->
@@ -474,9 +508,18 @@
                                 <!-- 由 JS 動態生成項目 -->
                             </div>
                             <button class="save-btn" style="margin-top:10px; background:var(--panel); border-style:dashed;" onclick="addMultiTargetRow()">+ Add Item</button>
-                            <div class="split-btn-container" style="margin-top:10px;">
-                                <button class="split-btn" onclick="saveMultiTargets(event)" title="Save to Browser">💾 Save List</button>
-                                <button class="split-btn" onclick="loadMultiTargets(event)" title="Load from Browser">📂 Load List</button>                                
+                            <div class="multi-target-actions">
+                                <select id="recent-production-plans-multi" class="production-plan-recent-select"
+                                    onchange="loadRecentProductionPlan(this.value)" title="Switch to a recently used plan"
+                                    aria-label="Recent plans">
+                                    <option value="">Recent plans</option>
+                                </select>
+                                <div class="split-btn-container" style="margin-top:10px;">
+                                    <button class="split-btn" onclick="saveMultiTargets(event)" title="Save list as a text file"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save List</button>
+                                    <button class="split-btn" onclick="openMultiTargetsFilePicker()" title="Load list from a text file"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Load List</button>
+                                </div>
+                                <input id="multi-target-file-input" type="file" accept=".txt,text/plain" hidden
+                                    onchange="loadMultiTargetsFile(this)">
                             </div>
                             <button class="save-btn" style="margin-top:10px; background:var(--panel); border-style:dashed;"
                                     onclick="quickSetFuelFertTargets()" title="Set 2 targets: Fuel & Fert, each at single-machine rate">
@@ -552,27 +595,9 @@
                     <div id="summary-line" style="margin-bottom: 5px;"></div>
                     <div id="equilibrium-warning-line" style="margin: 4px 0 8px; font-size: 0.95em; display:block; color: var(--warn);"></div>
                     <div class="production-view-toolbar">
-                        <span class="section-header">--- <span>Production Chain</span> ---</span>
                         <div class="planner-display-toggle" role="group" aria-label="Production chain view">
                             <button id="production-tree-mode-btn" class="tab-btn mini-tab active" type="button" onclick="setProductionChainView('tree')">Tree</button>
-                            <button id="production-graph-mode-btn" class="tab-btn mini-tab" type="button" onclick="setProductionChainView('graph')">TreeGraph</button>
-                        </div>
-                        <div class="production-plan-actions">
-                            <select id="recent-production-plans" class="production-plan-recent-select"
-                                onchange="loadRecentProductionPlan(this.value)" title="Switch to a recently used plan"
-                                aria-label="Recent plans">
-                                <option value="">Recent plans</option>
-                            </select>
-                            <button id="load-production-plan-btn" class="split-btn production-plan-action-btn" type="button"
-                                onclick="openProductionPlanFilePicker()" title="Load a saved plan file">
-                                ⭱ Load Plan
-                            </button>
-                            <button id="save-production-plan-btn" class="split-btn production-plan-action-btn" type="button"
-                                onclick="downloadCompressedProductionPlan(this)" title="Save the current plan as compressed Base64 text">
-                                ⭳ Save Plan
-                            </button>
-                            <input id="production-plan-file-input" type="file" accept=".txt,text/plain" hidden
-                                onchange="loadProductionPlanFile(this)">
+                            <button id="production-graph-mode-btn" class="tab-btn mini-tab" type="button" onclick="setProductionChainView('graph')">Graph</button>
                         </div>
                     </div>
                     <div id="tree"></div>
@@ -589,7 +614,6 @@
                                 <button class="planner-view-btn" onclick="plannerZoomIn()" title="Zoom In (+)">+</button>
                                 <button class="planner-view-btn" onclick="plannerZoomOut()" title="Zoom Out (-)">−</button>
                                 <button class="planner-view-btn" onclick="plannerFitToView()" title="Fit to View (F)">⤢</button>
-                                <button class="planner-view-btn" onclick="plannerOptimizeAllPortOrders()" title="Optimize Port Order">🔀</button>
                             </div>
                         </div>
                     </div>
@@ -778,10 +802,12 @@
             .planner-display-toggle .tab-btn:first-child { border-radius: 4px 0 0 4px; }
             .planner-display-toggle .tab-btn:last-child { border-radius: 0 4px 4px 0; }
             .production-view-toolbar { display:flex; align-items:center; gap:10px; margin:8px 0; }
-            .production-view-toolbar .section-header { margin-right:auto; }
-            .production-plan-actions { display:flex; align-items:center; gap:6px; flex:0 1 auto; min-width:0; }
-            .production-plan-action-btn { flex:0 0 auto; width:auto; min-height:36px; margin:0; padding:7px 14px; white-space:nowrap; }
-            .production-plan-recent-select { width:auto; min-width:150px; max-width:230px; min-height:36px; margin:0; }
+            .production-view-toolbar { justify-content:flex-end; }
+            .multi-target-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+            .multi-target-actions .split-btn-container { width:100%; flex:1 1 100%; margin-top:0 !important; }
+            .production-plan-actions { display:flex; align-items:center; gap:6px; flex:0 1 auto; min-width:0; flex-wrap:wrap; margin-top:10px; }
+            .production-plan-action-btn { flex:1 1 130px; width:auto; min-height:36px; margin:0; padding:7px 14px; white-space:nowrap; }
+            .production-plan-recent-select { flex:1 1 100%; width:100%; min-width:0; max-width:100%; min-height:36px; margin:0; }
             .production-treegraph { position:relative; width:100%; min-height:520px; height:min(72vh, 780px); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
             .production-treegraph .planner-canvas { width:100%; height:100%; min-height:520px; }
             .production-treegraph .planner-close-btn,
@@ -792,7 +818,7 @@
             @media (max-width: 760px) {
                 .production-recipe-select { max-width: 48vw; min-width: 110px; }
                 .production-view-toolbar { align-items:flex-start; flex-direction:column; }
-                .production-view-toolbar .section-header { margin-right:0; }
+                .multi-target-actions, .production-plan-actions { width:100%; }
                 .production-plan-actions { width:100%; flex-wrap:wrap; }
                 .production-plan-action-btn { flex:1 1 130px; min-height:40px; }
                 .production-plan-recent-select { flex:1 1 100%; width:100%; max-width:none; min-height:40px; }
@@ -882,58 +908,50 @@
     <script src="js/alchemy_planner_overlays.js"></script>
     <script>
         (() => {
-            const saved = localStorage.getItem('afc-theme') || 'dark';
-            const palettes = ['sage', 'coral', 'lavender', 'sky', 'orange'];
             const colors = {
-                sage: { bg:'#e1efdc', surface:'#fffdf7', text:'#17140f', primary:'#286b3e', secondary:'#c6dfbd', border:'#17140f', muted:'#393329' },
-                coral: { bg:'#f8e1d9', surface:'#fffdf7', text:'#17140f', primary:'#a93421', secondary:'#edbdae', border:'#17140f', muted:'#393329' },
-                lavender: { bg:'#ebe2f6', surface:'#fffdf7', text:'#17140f', primary:'#573a83', secondary:'#d4c2eb', border:'#17140f', muted:'#393329' },
-                sky: { bg:'#dceef3', surface:'#fffdf7', text:'#17140f', primary:'#075c76', secondary:'#b7dce7', border:'#17140f', muted:'#393329' },
-                orange: { bg:'#f5e8d4', surface:'#fff9ee', text:'#302014', primary:'#b94f12', secondary:'#efd0a7', border:'#704321', muted:'#765942' }
+                cream: { bg:'#f2e9d5', surface:'#fffdf7', text:'#2d261d', primary:'#7a4b20', secondary:'#e2d2b3', border:'#6f604e', muted:'#756858' },
+                charcoal: { bg:'#151515', surface:'#242424', text:'#e8e8e8', primary:'#7ac77d', secondary:'#303030', border:'#555555', muted:'#a0a0a0' }
             };
             const root = document.documentElement;
-            root.dataset.theme = saved;
-            root.dataset.palette = localStorage.getItem('afc-palette') || 'sage';
-            function applyColors(value) {
+            const savedMode = localStorage.getItem('afc-theme') || 'dark';
+            const savedPreset = localStorage.getItem('afc-theme-preset') || (savedMode === 'light' ? 'cream' : 'charcoal');
+            root.dataset.theme = savedPreset === 'cream' ? 'light' : savedPreset === 'charcoal' ? 'dark' : savedMode;
+            root.dataset.palette = savedPreset;
+            function applyColors(value, preset = 'custom') {
                 Object.entries(value).forEach(([key, color]) => root.style.setProperty(`--theme-${key}`, color));
                 document.querySelectorAll('[data-theme-color]').forEach(input => {
-                    input.value = value[input.dataset.themeColor] || colors.sage[input.dataset.themeColor];
+                    input.value = value[input.dataset.themeColor] || colors.charcoal[input.dataset.themeColor];
                 });
                 localStorage.setItem('afc-theme-colors', JSON.stringify(value));
+                document.querySelectorAll('[data-theme-preset]').forEach(button => {
+                    button.classList.toggle('active', button.dataset.themePreset === preset);
+                    button.setAttribute('aria-pressed', button.dataset.themePreset === preset ? 'true' : 'false');
+                });
             }
             let savedColors;
             try { savedColors = JSON.parse(localStorage.getItem('afc-theme-colors') || 'null'); } catch {}
-            applyColors(savedColors || colors[root.dataset.palette] || colors.sage);
+            applyColors(savedColors || colors[savedPreset] || colors.charcoal, savedColors ? 'custom' : savedPreset);
             document.querySelectorAll('[data-theme-color]').forEach(input => input.addEventListener('input', () => {
                 root.dataset.palette = 'custom';
-                const current = Object.fromEntries(Object.keys(colors.sage).map(key => [key, getComputedStyle(root).getPropertyValue(`--theme-${key}`).trim()]));
+                const current = Object.fromEntries(Object.keys(colors.charcoal).map(key => [key, getComputedStyle(root).getPropertyValue(`--theme-${key}`).trim()]));
                 current[input.dataset.themeColor] = input.value;
                 applyColors(current);
-                localStorage.setItem('afc-palette', 'custom');
+                localStorage.setItem('afc-theme-preset', 'custom');
             }));
-            window.toggleAppTheme = () => {
-                if (root.dataset.theme !== 'light') {
-                    root.dataset.theme = 'light';
-                    root.dataset.palette = 'sage';
-                    applyColors(colors.sage);
-                } else {
-                    const current = palettes.includes(root.dataset.palette) ? root.dataset.palette : 'sage';
-                    root.dataset.palette = palettes[(palettes.indexOf(current) + 1) % palettes.length];
-                    applyColors(colors[root.dataset.palette]);
-                }
+            window.applyThemePreset = preset => {
+                if (!colors[preset]) return;
+                root.dataset.theme = preset === 'cream' ? 'light' : 'dark';
+                root.dataset.palette = preset;
+                applyColors(colors[preset], preset);
                 localStorage.setItem('afc-theme', root.dataset.theme);
-                localStorage.setItem('afc-palette', root.dataset.palette);
-                updateThemeButton();
+                localStorage.setItem('afc-theme-preset', preset);
             };
-            function updateThemeButton() {
-                const button = document.getElementById('theme-toggle');
-                if (!button) return;
-                const light = document.documentElement.dataset.theme === 'light';
-                button.innerHTML = `${light ? '🎨' : '☀️'} <span>${light ? 'Theme colors · 7' : 'Theme / Giao diện'}</span>`;
-                button.title = light ? 'Edit the seven theme colors below' : 'Switch to light theme';
-                button.setAttribute('aria-label', button.title);
-            }
-            updateThemeButton();
+            window.openThemeColorPopup = () => {
+                const modal = document.getElementById('theme-color-modal');
+                if (!modal) return;
+                modal.style.display = 'flex';
+                requestAnimationFrame(() => modal.querySelector('input[type="color"]')?.focus());
+            };
         })();
     </script>
 </body>

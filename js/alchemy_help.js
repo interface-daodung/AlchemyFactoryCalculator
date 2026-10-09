@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ALCHEMY HELP PAGE  (Items · Machines · Full Documentation)
+   ALCHEMY HELP PAGE  (Items · Machines · Paradox · Contracts · Full Documentation)
    ========================================================================== */
 
 /* Contract data: image/source values verified against the current DB image
@@ -247,6 +247,35 @@ function _injectHelpStyles() {
 
         /* ── README / 完整說明 ── */
         .wiki-readme-area-wrap { flex: 1; min-height: 0; overflow: hidden; }
+        .wiki-paradox-page { box-sizing:border-box; width:100%; min-height:100%; overflow:auto; padding:16px; color:var(--text); }
+        .wiki-paradox-page h2 { margin:0 0 6px; color:var(--accent); }
+        .wiki-paradox-intro { color:var(--muted); font-size:.9em; line-height:1.5; }
+        .wiki-paradox-controls, .wiki-paradox-summary { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:10px 0; padding:6px 8px; background:var(--panel); border:1px solid var(--border); border-radius:6px; }
+        .wiki-paradox-controls label { color:var(--text); font-weight:700; }
+        .wiki-paradox-controls select { flex:0 1 auto; width:auto; min-width:150px; max-width:290px; background:var(--bg); color:var(--text); border:1px solid var(--border); }
+        .wiki-paradox-sort-btn { display:block; width:100%; min-height:34px; border:0; border-radius:0; background:var(--theme-primary); color:var(--theme-surface); cursor:pointer; font:inherit; font-weight:700; padding:5px 7px; }
+        .wiki-paradox-sort-btn:hover, .wiki-paradox-sort-btn.active { background:var(--theme-primary); color:var(--theme-surface); }
+        .wiki-paradox-sort-btn:focus, .wiki-paradox-sort-btn:active { background:#f2e9d5; color:#17140f; outline:2px solid var(--theme-primary); outline-offset:-2px; }
+        html[data-theme="light"] .view .wiki-paradox-sort-btn,
+        html[data-theme="light"] .view .wiki-paradox-sort-btn:hover,
+        html[data-theme="light"] .view .wiki-paradox-sort-btn.active { background-color:var(--theme-primary) !important; color:var(--theme-surface) !important; border-color:var(--theme-primary) !important; filter:none; }
+        html[data-theme="light"] .view .wiki-paradox-sort-btn:focus,
+        html[data-theme="light"] .view .wiki-paradox-sort-btn:active { background-color:#f2e9d5 !important; color:#17140f !important; filter:none; }
+        .wiki-paradox-sort-indicator { margin-left:3px; }
+        .wiki-paradox-summary > div { flex:1 1 260px; }
+        .wiki-paradox-summary strong { color:var(--accent); }
+        .wiki-paradox-table-wrap { overflow:auto; max-height:65vh; border:1px solid var(--border); }
+        .wiki-paradox-table { border-collapse:collapse; width:100%; min-width:0; table-layout:fixed; font-size:.78em; }
+        .wiki-paradox-table th, .wiki-paradox-table td { padding:3px; border-bottom:1px solid var(--border); text-align:right; white-space:normal; overflow-wrap:anywhere; }
+        .wiki-paradox-table th { position:sticky; top:0; z-index:1; padding:0; background:var(--theme-primary); color:var(--theme-surface); line-height:1.2; }
+        .wiki-paradox-table th:first-child, .wiki-paradox-table td:first-child { text-align:left; }
+        .wiki-paradox-item { display:inline-flex; align-items:center; gap:3px; max-width:100%; vertical-align:middle; }
+        .wiki-paradox-item img { width:20px; height:20px; object-fit:contain; flex:none; }
+        .wiki-paradox-item-name { min-width:0; max-width:none; overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere; }
+        .wiki-paradox-currency { width:16px; height:16px; object-fit:contain; vertical-align:middle; }
+        .wiki-paradox-best td { background:color-mix(in srgb,var(--accent) 14%,transparent); }
+        .wiki-paradox-best-badge { color:var(--accent); font-size:.78em; font-weight:700; margin-left:5px; }
+        .wiki-paradox-empty { padding:16px; color:var(--muted); text-align:center; }
         .wiki-readme-layout { display: flex; flex-direction: row; height: 100%; width: 100%; overflow: hidden; position: relative; }
         .wiki-readme-area { flex: 1; min-width: 0; overflow-y: auto; }
         .wiki-toc-sidebar {
@@ -807,6 +836,19 @@ function _renderItemDetail(itemName) {
     if (def.charges        != null) stats.push([_tn('Charges'),         def.charges]);
     if (def.buyPrice       != null) stats.push([_tn('Buy Price'),       def.buyPrice.toLocaleString()       + ' c']);
     if (def.sellPrice      != null) stats.push([_tn('Sell Price'),      def.sellPrice.toLocaleString()      + ' c']);
+    if (def.baseCost       != null) stats.push([_tn('Base Cost'),       Number(def.baseCost).toLocaleString() + ' c']);
+    if (def.paradoxTime    != null) stats.push([_tn('Paradox Time'),    Number(def.paradoxTime).toLocaleString(undefined, { maximumFractionDigits: 4 }) + ' s']);
+    if (def.baseCost != null && def.sellPrice != null
+        && Number.isFinite(Number(def.baseCost)) && Number.isFinite(Number(def.sellPrice))) {
+        var profitMargin = Number(def.sellPrice) - Number(def.baseCost);
+        var profitRate = Number(def.baseCost) !== 0
+            ? (profitMargin / Number(def.baseCost)) * 100
+            : null;
+        stats.push([_tn('Profit Margin'), profitMargin.toLocaleString(undefined, { maximumFractionDigits: 4 }) + ' c']);
+        stats.push([_tn('Profit Rate (on Base Cost)'), profitRate == null
+            ? '—'
+            : profitRate.toLocaleString(undefined, { maximumFractionDigits: 2 }) + '%']);
+    }
     if (def.wholesalePrice != null) stats.push([_tn('Wholesale Price'), def.wholesalePrice.toLocaleString() + ' c']);
     if (def.heat           != null) stats.push([_tn('Heat Value'),      def.heat          + ' P']);
     if (def.nutrientCost   != null) stats.push([_tn('Nutrient Cost'),   def.nutrientCost  + ' V/min']);
@@ -1360,6 +1402,158 @@ function _mdToHtml(md) {
     return { html: html.join('\n'), toc: toc };
 }
 
+/* ─── PARADOX COMPARISON PAGE ─── */
+function _paradoxEscapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, function(char) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+    });
+}
+
+function _paradoxFormatNumber(value, digits = 3) {
+    return Number(value).toLocaleString(undefined, { maximumFractionDigits: digits });
+}
+
+function _paradoxCurrencyHTML() {
+    return '<img class="wiki-paradox-currency" src="img/item611.png" width="18" height="18" alt="c" title="Copper Coin">';
+}
+
+function _buildParadoxAreaHTML() {
+    var rawDB = (typeof DB !== 'undefined') ? DB : {};
+    var items = rawDB.items || {};
+    var fuelEntries = Object.entries(items).filter(function(entry) {
+        var def = entry[1];
+        return !def.virtual && Number(def.heat) > 0 && Number.isFinite(Number(def.baseCost)) && Number(def.baseCost) > 0;
+    }).sort(function(a, b) { return Number(b[1].heat) - Number(a[1].heat); });
+    var savedFuel = rawDB.settings?.defaultFuel;
+    var selectedFuel = fuelEntries.some(function(entry) { return entry[0] === savedFuel; })
+        ? savedFuel
+        : (fuelEntries.some(function(entry) { return entry[0] === 'Panacea Potion'; }) ? 'Panacea Potion' : fuelEntries[0]?.[0]);
+    var options = fuelEntries.map(function(entry) {
+        var name = entry[0], def = entry[1];
+        return '<option value="' + _paradoxEscapeHtml(name) + '"' + (name === selectedFuel ? ' selected' : '') + '>'
+            + _paradoxEscapeHtml(_tn(name, 'items')) + ' (' + _paradoxFormatNumber(def.heat, 0) + ' P)</option>';
+    }).join('');
+
+    var categories = Array.from(new Set(Object.values(items).filter(function(def) {
+        return !def.virtual && def.paradoxTime != null && Number.isFinite(Number(def.paradoxTime)) && Number(def.paradoxTime) >= 0
+            && Number(def.baseCost) > 0 && def.category;
+    }).map(function(def) { return def.category; }))).sort();
+    var categoryOptions = '<option value="">' + _tn('All categories') + '</option>' + categories.map(function(category) {
+        return '<option value="' + _paradoxEscapeHtml(category) + '">' + _paradoxEscapeHtml(_tn(category, 'categories')) + '</option>';
+    }).join('');
+
+    return '<div class="wiki-paradox-page">'
+        + '<h2>' + _tn('Paradox') + '</h2>'
+        + '<div class="wiki-paradox-controls"><label for="wiki-paradox-fuel">' + _tn('Fuel Source') + '</label>'
+        + '<select id="wiki-paradox-fuel" onchange="_renderParadoxComparison()">' + options + '</select>'
+        + '<label for="wiki-paradox-category">' + _tn('Filter by category') + '</label>'
+        + '<select id="wiki-paradox-category" onchange="_renderParadoxComparison()">' + categoryOptions + '</select>'
+        + '<span id="wiki-paradox-fuel-detail" class="wiki-paradox-intro"></span></div>'
+        + '<div class="wiki-paradox-table-wrap"><table class="wiki-paradox-table">'
+        + '<thead><tr>' + [['name','Item'],['time','Paradox Time (sec)'],['materialCost','Material Cost'],['heatingCost','Heating Cost'],['totalCost','Total Cost']].map(function(col) {
+            return '<th><button type="button" class="wiki-paradox-sort-btn" data-sort-key="' + col[0] + '" onclick="_sortParadoxBy(\'' + col[0] + '\')">' + _tn(col[1]) + ' <span class="wiki-paradox-sort-indicator"></span></button></th>';
+        }).join('') + '</tr></thead>'
+        + '<tbody id="wiki-paradox-tbody"></tbody></table></div>'
+        + '<div id="wiki-paradox-summary" class="wiki-paradox-summary"></div>'
+        + '</div>';
+}
+
+var _paradoxSortKey = 'totalCost';
+var _paradoxSortDirection = 1;
+function _sortParadoxBy(key) {
+    if (_paradoxSortKey === key) _paradoxSortDirection *= -1;
+    else { _paradoxSortKey = key; _paradoxSortDirection = 1; }
+    _renderParadoxComparison();
+}
+
+function _renderParadoxComparison() {
+    var tbody = document.getElementById('wiki-paradox-tbody');
+    var summary = document.getElementById('wiki-paradox-summary');
+    var fuelDetail = document.getElementById('wiki-paradox-fuel-detail');
+    var select = document.getElementById('wiki-paradox-fuel');
+    var categorySelect = document.getElementById('wiki-paradox-category');
+    if (!tbody || !summary || !select) return;
+
+    var rawDB = (typeof DB !== 'undefined') ? DB : {};
+    var items = rawDB.items || {};
+    var fuel = items[select.value];
+    var machineHeatCost = Number(rawDB.machines?.['Paradox Crucible']?.heatCost) || 1200;
+    if (!fuel || !(Number(fuel.heat) > 0) || !(Number(fuel.baseCost) > 0)) {
+        tbody.innerHTML = '<tr><td colspan="5" class="wiki-paradox-empty">' + _tn('No valid fuel with Heat Value and Base Cost was found.') + '</td></tr>';
+        summary.innerHTML = '';
+        if (fuelDetail) fuelDetail.textContent = '';
+        return;
+    }
+
+    if (fuelDetail) fuelDetail.innerHTML = _tn('Fuel cost per heat') + ': ' + _paradoxFormatNumber(Number(fuel.baseCost) / Number(fuel.heat), 2) + ' ' + _paradoxCurrencyHTML() + '/P';
+
+    var rows = Object.entries(items).map(function(entry) {
+        var name = entry[0], def = entry[1];
+        if (def.virtual || def.paradoxTime == null || !(Number(def.baseCost) > 0)) return null;
+        var time = Number(def.paradoxTime);
+        if (!(Number.isFinite(Number(time)) && Number(time) >= 0)) return null;
+        var stackMultiplier = Number(def.maxStack) < 0 ? Math.abs(Number(def.maxStack)) : 1;
+        var materialCost = Number(def.baseCost) * stackMultiplier;
+        var heatingCost = machineHeatCost * Number(time) * Number(fuel.baseCost) / Number(fuel.heat);
+        return {
+            name: name,
+            def: def,
+            time: Number(time),
+            materialCost: materialCost,
+            heatingCost: heatingCost,
+            totalCost: materialCost + heatingCost
+        };
+    }).filter(Boolean);
+
+    var selectedCategory = categorySelect ? categorySelect.value : '';
+    if (selectedCategory) rows = rows.filter(function(row) { return row.def.category === selectedCategory; });
+    rows.sort(function(a, b) {
+        var aValue = a[_paradoxSortKey], bValue = b[_paradoxSortKey];
+        if (_paradoxSortKey === 'name') {
+            aValue = _tn(a.name, 'items'); bValue = _tn(b.name, 'items');
+            return aValue.localeCompare(bValue) * _paradoxSortDirection;
+        }
+        return (aValue - bValue) * _paradoxSortDirection;
+    });
+    document.querySelectorAll('.wiki-paradox-sort-btn').forEach(function(button) {
+        var active = button.dataset.sortKey === _paradoxSortKey;
+        button.classList.toggle('active', active);
+        var indicator = button.querySelector('.wiki-paradox-sort-indicator');
+        if (indicator) indicator.textContent = active ? (_paradoxSortDirection === 1 ? '▲' : '▼') : '';
+        button.setAttribute('aria-label', _tn(button.dataset.sortKey === _paradoxSortKey
+            ? (_paradoxSortDirection === 1 ? 'Sort descending' : 'Sort ascending') : 'Sort ascending'));
+    });
+
+    if (!rows.length) {
+        var emptyMessage = selectedCategory ? _tn('No items match this category.') : _tn('No items have usable Paradox Time and Base Cost data.');
+        tbody.innerHTML = '<tr><td colspan="5" class="wiki-paradox-empty">' + emptyMessage + '</td></tr>';
+        summary.innerHTML = '';
+        return;
+    }
+
+    var overallBest = rows.reduce(function(best, row) { return !best || row.totalCost < best.totalCost ? row : best; }, null);
+    var herbBest = rows.filter(function(row) { return row.def.category === 'Herbs'; })
+        .reduce(function(best, row) { return !best || row.totalCost < best.totalCost ? row : best; }, null);
+    tbody.innerHTML = rows.map(function(row) {
+        var badges = (row === overallBest ? '<span class="wiki-paradox-best-badge">' + _tn('Best overall') + '</span>' : '')
+            + (row === herbBest ? '<span class="wiki-paradox-best-badge">' + _tn('Best herb') + '</span>' : '');
+        return '<tr' + ((row === overallBest || row === herbBest) ? ' class="wiki-paradox-best"' : '') + '>'
+            + '<td><span class="wiki-paradox-item"><img src="img/item' + (Number(row.def.id) || 0) + '.png" alt="" onerror="this.style.opacity=\'0.15\'">'
+            + '<span class="wiki-paradox-item-name" title="' + _paradoxEscapeHtml(_tn(row.name, 'items')) + '">' + _paradoxEscapeHtml(_tn(row.name, 'items')) + '</span></span>' + badges + '</td>'
+            + '<td>' + _paradoxFormatNumber(row.time, 2) + '</td>'
+            + '<td>' + _paradoxFormatNumber(row.materialCost, 2) + ' ' + _paradoxCurrencyHTML() + '</td>'
+            + '<td>' + _paradoxFormatNumber(row.heatingCost, 2) + ' ' + _paradoxCurrencyHTML() + '</td>'
+            + '<td><strong>' + _paradoxFormatNumber(row.totalCost, 2) + ' ' + _paradoxCurrencyHTML() + '</strong></td></tr>';
+    }).join('');
+
+    var bestSummary = '<div><strong>' + _tn('Lowest total paradox cost') + ':</strong> '
+        + _paradoxEscapeHtml(_tn(overallBest.name, 'items')) + ' — ' + _paradoxFormatNumber(overallBest.totalCost, 2) + ' ' + _paradoxCurrencyHTML() + '</div>';
+    var herbSummary = herbBest
+        ? '<div><strong>' + _tn('Most economical herb') + ':</strong> ' + _paradoxEscapeHtml(_tn(herbBest.name, 'items')) + ' — ' + _paradoxFormatNumber(herbBest.totalCost, 2) + ' ' + _paradoxCurrencyHTML() + '</div>'
+        : '<div><strong>' + _tn('Most economical herb') + ':</strong> ' + _tn('No herb has usable Paradox Time and Base Cost data.') + '</div>';
+    summary.innerHTML = bestSummary + herbSummary;
+}
+
 /* ─── CONTRACTS PAGE ─── */
 function _computeContractRow(entry, params) {
     var workMinutes = params.workMinutes;
@@ -1513,6 +1707,10 @@ function wikiSwitchView(view) {
         area.className = 'wiki-readme-area-wrap';
         area.innerHTML = _buildContractsAreaHTML();
         _renderContractsTable();
+    } else if (view === 'paradox') {
+        area.className = 'wiki-readme-area-wrap';
+        area.innerHTML = _buildParadoxAreaHTML();
+        _renderParadoxComparison();
     }
     _updateLayoutState();
 }
@@ -1531,6 +1729,7 @@ function renderHelpPage() {
         + '<div class="wiki-subnav">'        
         + '<button class="wiki-tab-btn" data-view="items"    ' + _oc('wikiSwitchView', 'items')    + '>' + _tn('Items')    + '</button>'
         + '<button class="wiki-tab-btn" data-view="machines" ' + _oc('wikiSwitchView', 'machines') + '>' + _tn('Machines') + '</button>'
+        + '<button class="wiki-tab-btn" data-view="paradox"  ' + _oc('wikiSwitchView', 'paradox') + '>' + _tn('Paradox') + '</button>'
         + '<button class="wiki-tab-btn" data-view="contracts" ' + _oc('wikiSwitchView', 'contracts') + '>' + _tn('Contracts') + '</button>'
         + '<button class="wiki-tab-btn" data-view="readme"   ' + _oc('wikiSwitchView', 'readme')   + '>' + _tn('Full Documentation') + '</button>'
         + '</div>'

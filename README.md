@@ -5,7 +5,7 @@
 A browser-based production planning tool for the game **Alchemy Factory**.
 Precisely calculates raw material consumption, machine counts, heat/nutrient loads, and profitability for any production chain.
 
-**Live version:** [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator)
+**Live version:** [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/)
 
 ---
 
@@ -30,7 +30,7 @@ Precisely calculates raw material consumption, machine counts, heat/nutrient loa
 ## 🚀 Getting Started
 
 #### Online
-Open [https://starfi5h.github.io/AlchemyFactoryCalculator](https://starfi5h.github.io/AlchemyFactoryCalculator) in any modern browser. No installation required.
+Open [https://interface-daodung.github.io/AlchemyFactoryCalculator/](https://interface-daodung.github.io/AlchemyFactoryCalculator/) in any modern browser. No installation required.
 
 #### Local
 1. Download or clone this repository.

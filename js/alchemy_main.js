@@ -281,7 +281,16 @@ function translateText() {
 
     document.querySelectorAll(selectors).forEach(el => {
         const key = el.textContent.trim();
-        el.textContent = t(key, 'ui');
+        const icon = el.querySelector('i');
+        if (el.tagName === 'LABEL' && el.querySelector('input')) {
+            const labelText = el.querySelector(':scope > span') || [...el.childNodes].find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+            if (labelText) labelText.textContent = t(key, 'ui');
+        } else if (icon && el.classList.contains('split-btn')) {
+            const labelNode = [...el.childNodes].reverse().find(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim());
+            if (labelNode) labelNode.textContent = ` ${t(key, 'ui')}`;
+        } else {
+            el.textContent = t(key, 'ui');
+        }
     });
 
     const input = document.getElementById('targetItemInput');
