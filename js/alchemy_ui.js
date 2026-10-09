@@ -436,30 +436,40 @@ function loadMultiTargets(e) {
     flashButton(e.currentTarget);
 }
 
-/**
- * 快速將多產物清單設為 [selectedFuel, selectedFert] 各一列，
- * 速率各自為「單一機台滿載」速率
- */
+/** Add current fuel/fertilizer demand to their production targets. */
 function quickSetFuelFertTargets() {
     const fuelItem = document.getElementById('fuelSelect').value;
     const fertItem = document.getElementById('fertSelect').value;
-    if (!fuelItem || !fertItem) return;
+    if (!fuelItem && !fertItem) return;
+
+    // Capture demand before switching modes, since switching triggers a new calculation.
+    const fuelDemand = Number(_lastCalcResult?.summary?.fuelDemandItems) || 0;
+    const fertDemand = Number(_lastCalcResult?.summary?.fertDemandItems) || 0;
 
     // 確保處於多產物模式
     const modeToggle = document.getElementById('modeToggle');
     if (!modeToggle.checked) {
         modeToggle.checked = true;
-        toggleCalcMode();
+        document.getElementById('single-target-ui').style.display = 'none';
+        document.getElementById('multi-target-ui').style.display = 'block';
     }
 
     const container = document.getElementById('multi-target-list');
-    container.innerHTML = '';
+    const addDemandTarget = (item, demand) => {
+        if (!item || demand <= 0) return;
+        const existingRow = [...container.querySelectorAll('.multi-target-row')]
+            .find(row => row.dataset.item === item);
+        if (existingRow) {
+            const rateInput = existingRow.querySelector('.multi-rate-input');
+            const currentRate = Number.parseFloat(rateInput.value) || 0;
+            rateInput.value = Number((currentRate + demand).toFixed(2));
+        } else {
+            addMultiTargetRow(item, Number(demand.toFixed(2)));
+        }
+    };
 
-    const fuelRate = getSingleMachineRate(fuelItem);
-    const fertRate = getSingleMachineRate(fertItem);
-
-    addMultiTargetRow(fuelItem, Number((fuelRate || 0).toFixed(2)));
-    addMultiTargetRow(fertItem, Number((fertRate || 0).toFixed(2)));
+    addDemandTarget(fuelItem, fuelDemand);
+    addDemandTarget(fertItem, fertDemand);
 
     calculate();
 }
