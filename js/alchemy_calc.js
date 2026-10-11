@@ -36,11 +36,16 @@ function escapeProductionHtml(value) {
 }
 
 function getProductionRecipeLabel(recipe) {
-    const machine = t(recipe.machine, 'machines');
     const inputs = Object.entries(recipe.inputs || {})
         .map(([item, qty]) => `${Number(Number(qty).toFixed(3))}× ${item}`)
         .join(' + ');
-    return inputs ? `${machine} — ${inputs}` : machine;
+    return inputs ? ` — ${inputs}` : '';
+}
+
+function productionMachineImage(machine, className = 'production-machine-icon') {
+    const name = t(machine, 'machines');
+    const src = `img/machines/${String(machine).toLowerCase().replaceAll(' ', '-')}.png`;
+    return `<img class="${className}" src="${escapeProductionHtml(src)}" alt="${escapeProductionHtml(name)}" title="${escapeProductionHtml(name)}" loading="lazy" onerror="this.style.opacity='0'">`;
 }
 
 function renderProductionRecipeSelect(item, pathKey, activeRecipe) {
@@ -50,25 +55,42 @@ function renderProductionRecipeSelect(item, pathKey, activeRecipe) {
     if (!showPicker) return '';
 
     const options = candidates.map(recipe => {
-        const selected = recipe.id === activeRecipe?.id ? ' selected' : '';
-        return `<option value="${escapeProductionHtml(recipe.id)}"${selected}>${escapeProductionHtml(getProductionRecipeLabel(recipe))}</option>`;
+        const selected = recipe.id === activeRecipe?.id;
+        const label = getProductionRecipeLabel(recipe);
+        return `<button type="button" class="production-recipe-option${selected ? ' selected' : ''}"
+            data-item="${encodeURIComponent(item)}" data-path="${encodeURIComponent(pathKey)}"
+            data-recipe="${escapeProductionHtml(recipe.id)}" aria-pressed="${selected}"
+            onclick="onProductionRecipeOptionClick(this)">${productionMachineImage(recipe.machine)}<span>${escapeProductionHtml(label)}</span></button>`;
     });
-    if (!activeRecipe) {
-        options.unshift(`<option value="" selected disabled>${escapeProductionHtml(t('No Recipe', 'ui'))}</option>`);
-    }
+    const activeLabel = activeRecipe
+        ? `${productionMachineImage(activeRecipe.machine)}<span>${escapeProductionHtml(getProductionRecipeLabel(activeRecipe).replace(/^ — /, ''))}</span>`
+        : `<span>${escapeProductionHtml(t('No Recipe', 'ui'))}</span>`;
     if (DB.settings.nodeRecipeOverrides?.[pathKey]) {
-        options.unshift(`<option value="__default__">↩ ${escapeProductionHtml(t('Use Global Recipe', 'ui'))}</option>`);
+        options.unshift(`<button type="button" class="production-recipe-option" data-item="${encodeURIComponent(item)}" data-path="${encodeURIComponent(pathKey)}" data-recipe="__default__" onclick="onProductionRecipeOptionClick(this)">↩ ${escapeProductionHtml(t('Use Global Recipe', 'ui'))}</button>`);
     }
     if (itemDef.cauldronTarget !== undefined) {
-        options.push(`<option value="__add_cauldron__">＋ ${escapeProductionHtml(t('Add Cauldron Recipe', 'ui'))}</option>`);
+        options.push(`<button type="button" class="production-recipe-option" data-item="${encodeURIComponent(item)}" data-path="${encodeURIComponent(pathKey)}" data-recipe="__add_cauldron__" onclick="onProductionRecipeOptionClick(this)">＋ ${escapeProductionHtml(t('Add Cauldron Recipe', 'ui'))}</button>`);
     }
 
-    return `<select class="production-recipe-select"
-        data-item="${encodeURIComponent(item)}" data-path="${encodeURIComponent(pathKey)}"
-        data-current="${escapeProductionHtml(activeRecipe?.id || '')}"
-        title="${escapeProductionHtml(t('Select Recipe for ') + item)}"
-        aria-label="${escapeProductionHtml(t('Select Recipe for ') + item)}"
-        onchange="onProductionRecipeChange(this)">${options.join('')}</select>`;
+    return `<details class="production-recipe-picker">
+        <summary class="production-recipe-select" title="${escapeProductionHtml(t('Select Recipe for ') + item)}" aria-label="${escapeProductionHtml(t('Select Recipe for ') + item)}">${activeLabel}</summary>
+        <div class="production-recipe-options">${options.join('')}</div>
+    </details>`;
+}
+
+function onProductionRecipeOptionClick(option) {
+    const item = decodeURIComponent(option.dataset.item || '');
+    const pathKey = decodeURIComponent(option.dataset.path || '');
+    const recipeId = option.dataset.recipe;
+    option.closest('.production-recipe-picker')?.removeAttribute('open');
+    if (recipeId === '__add_cauldron__') {
+        openCauldronRecipeModal(item, pathKey);
+        return;
+    }
+    if (recipeId === '__default__') delete DB.settings.nodeRecipeOverrides[pathKey];
+    else DB.settings.nodeRecipeOverrides[pathKey] = recipeId;
+    persist();
+    calculate();
 }
 
 function onProductionRecipeChange(select) {
@@ -561,7 +583,7 @@ function renderTreeNode(params, node) {
         }
         const machineIcon = node.tags.heat ? '🔥' : (node.tags.bio ? '🌱' : '');
         const machineNumber = params.showRawMachineCount ? Number(node.machineCount.toFixed(2)) : Math.ceil(node.machineCount - 0.0001);
-        machineTag = `<span class="machine-tag" data-tooltip="${tooltipText}">${machineNumber} ${t(node.machine, 'machines')}${capTag} ${machineIcon}</span>`;
+        machineTag = `<span class="machine-tag" data-tooltip="${tooltipText}">${machineNumber} ${productionMachineImage(node.machine)}${capTag} ${machineIcon}</span>`;
         if (['Advanced Athanor', 'Thermal Extractor', 'Paradox Crucible'].includes(node.recipe?.machine)) {
             recipeConfigBtn = `<button class="swap-btn"
                 data-item="${encodeURIComponent(node.item)}" data-path="${encodeURIComponent(node.pathKey)}"

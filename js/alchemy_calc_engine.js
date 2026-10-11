@@ -828,39 +828,28 @@
         let fertWindow = [];
         let equilibriumWarning = null; // null | 'LowFuel' | 'LowFert' | 'Divergence'
 
-        // Seed the solver with a ghost pass, then use the linear estimate as the
-        // initial fuel/fert guess when self-production is enabled.
-        for(;;)
-        {
-            const totalByproducts = {};
-            let model = buildProductionModel({
-                db, params, state, isGhost: true,
-                initialAvailableByproducts: byproductGuess,
-                initialTotalByproducts: totalByproducts,
-                internalFuelRate: fuelGuess,
-                internalFertRate: fertGuess
-            });
-            byproductGuess = cloneRecord(totalByproducts);
+        // Seed the solver with a ghost pass, then use the linear estimate as an
+        // initial guess when it is usable. The estimate freezes the byproduct
+        // pool, so it is only an acceleration hint: it cannot decide whether
+        // the coupled production system has a valid equilibrium.
+        const initialTotalByproducts = {};
+        buildProductionModel({
+            db, params, state, isGhost: true,
+            initialAvailableByproducts: byproductGuess,
+            initialTotalByproducts,
+            internalFuelRate: fuelGuess,
+            internalFertRate: fertGuess
+        });
+        byproductGuess = cloneRecord(initialTotalByproducts);
 
-           // Reject an invalid fixed-point estimate early and otherwise use it as the initial guess.
-            if (shouldFuel || shouldFert) {
-                const linearEstimate = estimateFuelFertLinearGuess(db, params, state, shouldFuel, shouldFert);
-                if (linearEstimate.divergent) {
-                    console.warn("Solve Equilibrium Diverged (linear pre-check): internal fuel/fert module demand exceeds its own supply.");
-                    params.selfFert = false;
-                    shouldFert = false;
-                    fertGuess = 0;
-                    params.selfFuel = false;
-                    shouldFuel = false;
-                    fuelGuess = 0;
-                    equilibriumWarning = 'LowSupply';
-                    continue;
-                }
-                // 用線性解出的值作為疊代起點，取代原本的 0 初始值，減少後續 warm-up/主迴圈所需輪數
+        if (shouldFuel || shouldFert) {
+            const linearEstimate = estimateFuelFertLinearGuess(db, params, state, shouldFuel, shouldFert);
+            if (!linearEstimate.divergent) {
+                // Replace the zero start with the estimated fixed point to reduce
+                // the number of iterations needed by the coupled solver.
                 fuelGuess = linearEstimate.fuelGuess;
                 fertGuess = linearEstimate.fertGuess;
             }
-            break;
         }
 
         const maxTimes = 60;
