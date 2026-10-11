@@ -403,6 +403,40 @@ function pickMultiTargetRow(pickerEl) {
     openItemPicker();
 }
 
+function captureRecursivePlanState() {
+    // Recipe choices for nested calculator nodes are keyed by pathKey. Keep the
+    // complete calculator settings snapshot so those choices survive export.
+    DB.settings.activeRecyclers = Object.fromEntries([...GLOBAL_CALC_STATE.activeRecyclers].map(key => [key, true]));
+    const settings = JSON.parse(JSON.stringify(DB.settings));
+    settings.forcedExternals = [...GLOBAL_CALC_STATE.forcedExternals];
+    return {
+        settings,
+        cauldronRecipes: (DB.recipes || []).filter(recipe => recipe.id?.startsWith('AUTO_GENERATED_CAULDRON'))
+    };
+}
+
+function applyRecursivePlanState(state = {}) {
+    if (state.settings && typeof state.settings === 'object') {
+        const nextSettings = { ...DB.settings };
+        Object.keys(state.settings).forEach(key => {
+            if (key in DEFAULT_SETTINGS || key === 'multiTargets' || key === 'forcedExternals') {
+                nextSettings[key] = JSON.parse(JSON.stringify(state.settings[key]));
+            }
+        });
+        DB.settings = nextSettings;
+    }
+    if (Array.isArray(state.cauldronRecipes)) {
+        DB.recipes = (DB.recipes || []).filter(recipe => !recipe.id?.startsWith('AUTO_GENERATED_CAULDRON'));
+        DB.recipes.push(...state.cauldronRecipes.filter(recipe =>
+            recipe && typeof recipe.id === 'string' && recipe.id.startsWith('AUTO_GENERATED_CAULDRON')
+        ));
+    }
+    GLOBAL_CALC_STATE.activeRecyclers = new Set(Object.entries(DB.settings.activeRecyclers || {})
+        .filter(([, enabled]) => enabled).map(([key]) => key));
+    GLOBAL_CALC_STATE.forcedExternals = new Set(DB.settings.forcedExternals || []);
+    persist();
+}
+
 function saveMultiTargets(e) {
     const targets = [];
     const rows = document.querySelectorAll('.multi-target-row');    
@@ -417,7 +451,7 @@ function saveMultiTargets(e) {
         alert(t("List is empty, nothing to save.", "ui"));
         return;
     }
-    const payload = { format: 'AFC_MULTI_TARGETS', version: 1, targets };
+    const payload = { format: 'AFC_MULTI_TARGETS', version: 2, targets, ...captureRecursivePlanState() };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
@@ -444,6 +478,10 @@ async function loadMultiTargetsFile(input) {
         if (!Array.isArray(targets) || targets.length === 0 || targets.some(target =>
             !target || typeof target.item !== 'string' || !target.item || !Number.isFinite(Number(target.rate)))) {
             throw new Error('Invalid list file');
+        }
+        if (!Array.isArray(parsed) && parsed?.format === 'AFC_MULTI_TARGETS') {
+            applyRecursivePlanState(parsed);
+            loadSettingsToUI();
         }
         renderMultiTargetsFromFile(targets);
     } catch (error) {
@@ -628,6 +666,7 @@ function captureProductionPlanPayload() {
     DB.settings.showMaxCap = document.getElementById('showMaxCap').checked;
     DB.settings.showHeatFert = document.getElementById('showHeatFert').checked;
     persist();
+    const recursiveState = captureRecursivePlanState();
 
     const isMultiTarget = document.getElementById('modeToggle').checked;
     const currentTargets = isMultiTarget
@@ -649,8 +688,9 @@ function captureProductionPlanPayload() {
         plan: {
             mode: isMultiTarget ? 'multi' : 'single',
             targets: currentTargets,
-            settings: JSON.parse(JSON.stringify(DB.settings))
-        }
+            settings: recursiveState.settings
+        },
+        cauldronRecipes: recursiveState.cauldronRecipes
     };
 }
 
@@ -699,13 +739,15 @@ function renderRecentProductionPlans(selectedId = '') {
     if (!selects.length) return;
     const entries = readRecentProductionPlans();
     selects.forEach(select => {
+        const isMultiSelect = select.id === 'recent-production-plans-multi';
+        const visibleEntries = entries.filter(entry => (entry.payload?.plan?.mode === 'multi') === isMultiSelect);
         select.replaceChildren(new Option(t('Recent plans', 'ui'), ''));
-        entries.forEach(entry => {
+        visibleEntries.forEach(entry => {
             const when = new Date(entry.usedAt);
             const timeLabel = Number.isNaN(when.getTime()) ? '' : ` — ${when.toLocaleString()}`;
             select.appendChild(new Option(`${entry.name}${timeLabel}`, entry.id));
         });
-        select.value = selectedId;
+        select.value = visibleEntries.some(entry => entry.id === selectedId) ? selectedId : '';
     });
 }
 
@@ -737,7 +779,7 @@ function applyProductionPlanPayload(payload) {
     if (!isValidProductionPlanPayload(payload)) throw new Error('Invalid production plan payload.');
 
     const importedSettings = payload.plan.settings;
-    const allowedSettings = new Set([...Object.keys(DEFAULT_SETTINGS), 'multiTargets']);
+    const allowedSettings = new Set([...Object.keys(DEFAULT_SETTINGS), 'multiTargets', 'forcedExternals']);
     const nextSettings = JSON.parse(JSON.stringify(DB.settings || DEFAULT_SETTINGS));
     Object.keys(importedSettings).forEach(key => {
         if (allowedSettings.has(key)) nextSettings[key] = JSON.parse(JSON.stringify(importedSettings[key]));
@@ -752,6 +794,7 @@ function applyProductionPlanPayload(payload) {
     nextSettings.targetRate = firstTarget.rate;
     nextSettings.multiTargets = targets;
     DB.settings = nextSettings;
+    applyRecursivePlanState({ settings: nextSettings, cauldronRecipes: payload.cauldronRecipes });
     persist();
 
     loadSettingsToUI();

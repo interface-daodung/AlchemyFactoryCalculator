@@ -5,6 +5,7 @@
     --theme-bg:#151515; --theme-surface:#242424; --theme-text:#e8e8e8;
     --theme-primary:#7ac77d; --theme-secondary:#303030; --theme-border:#555555;
     --theme-muted:#a0a0a0;
+    --theme-success:#62d98b; --theme-success-text:#102317; --theme-danger:#ff7770;
     --bg:var(--theme-bg); --text:var(--theme-text); --accent:var(--theme-primary);
     --panel:var(--theme-surface); --border:var(--theme-border); --muted:var(--theme-muted);
     --warn:var(--theme-primary); --gold:var(--theme-primary); --info:var(--theme-primary);
@@ -1162,6 +1163,8 @@ html[data-theme="light"] {
     --warn:#b96300; --gold:#9b7400; --info:#1769aa; --profit:#287b43;
     --bio:#4e8500; --fuel:#c84d27; --danger:#c33732;
     --belt-count:#1769aa; --byproduct:#8b3e9a;
+    --theme-success:#176b2c; --theme-danger:#b42318;
+    --theme-success-text:#ffffff;
 }
 html[data-theme="light"] body { background:var(--bg); color:var(--text); font-size:14px; }
 html[data-theme="light"] .view { font-size:1.04rem; }
@@ -1590,3 +1593,38 @@ html[data-theme] #update-banner { background:var(--theme-primary); color:var(--t
 html[data-theme] #update-banner * { color:inherit; border-color:var(--theme-surface); }
 html[data-theme] #settings-drawer .theme-color-settings h3 { color:var(--theme-primary) !important; }
 html[data-theme] #settings-drawer .theme-preset-btn.active { color:var(--theme-surface) !important; }
+
+/* The cauldron shortcut modal is rendered outside .view and uses theme tokens directly. */
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-slot-btn {
+    background:var(--theme-surface); color:var(--theme-text); border:1px solid var(--theme-border);
+}
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-slot-btn:hover,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-slot-btn.active {
+    background:var(--theme-secondary); border-color:var(--theme-primary);
+}
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-target,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-current-value { color:var(--theme-text); }
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-target strong { color:var(--theme-text); }
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-range,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-empty-value,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-saved-count { color:var(--theme-muted); }
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-result.is-match {
+    background:color-mix(in srgb,var(--theme-success) 14%,var(--theme-surface)); border:1px solid var(--theme-success);
+}
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-result.is-mismatch {
+    background:color-mix(in srgb,var(--theme-danger) 13%,var(--theme-surface)); border:1px solid var(--theme-danger);
+}
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-result.is-match .cauldron-modal-status,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-current-value.in-range,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-distance.in-range { color:var(--theme-success); }
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-result.is-mismatch .cauldron-modal-status,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-current-value.out-of-range,
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-distance.out-of-range { color:var(--theme-danger); }
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-apply.is-match {
+    background:var(--theme-success); color:var(--theme-success-text); border-color:var(--theme-success);
+}
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-apply.is-match:hover { background:color-mix(in srgb,var(--theme-success) 80%,var(--theme-text)); color:var(--theme-surface); }
+html[data-theme] #cauldron-recipe-modal .cauldron-modal-favorite { color:var(--theme-primary); }
+@media (max-width:520px) {
+    #cauldron-recipe-modal-body > div > :is(.cauldron-modal-target,.cauldron-modal-current-value) { flex-wrap:wrap; }
+}

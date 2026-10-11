@@ -513,6 +513,9 @@ window.ALCHEMY_DB = {
         { "id": "Oblivion Essence (Silver Coin x2)", "machine": "Paradox Crucible", "inputs": { "Silver Coin": 2 }, "outputs": { "Oblivion Essence": 1 }, "baseTime": 0.79 },
         // 自訂輸入配方：inputs 為空，實際內容由 DB.settings.recipeModifiers[id].customInput 動態決定
         { "id": "Oblivion Essence (Custom)", "machine": "Paradox Crucible", "inputs": {}, "outputs": { "Oblivion Essence": 1 }, "baseTime": 1, "customInputSlot": true },
+        { "id": "Oblivion Essence (Sage Seeds)", "machine": "Paradox Crucible", "inputs": { "Sage Seeds": 1 }, "outputs": { "Oblivion Essence": 1 }, "baseTime": 8.7 },
+        { "id": "Oblivion Essence (Vitality Essence)", "machine": "Paradox Crucible", "inputs": { "Vitality Essence": 1 }, "outputs": { "Oblivion Essence": 1 }, "baseTime": 5.0 },
+        { "id": "Oblivion Essence (Lavender)", "machine": "Paradox Crucible", "inputs": { "Lavender": 1 }, "outputs": { "Oblivion Essence": 1 }, "baseTime": 8.333 },
         { "id": "Vitality Essence", "machine": "Paradox Crucible", "inputs": { "Oblivion Essence": 1 }, "outputs": { "Vitality Essence": 1 }, "baseTime": 5.0 },
 
         // --- SHARDS & GEMS CHAIN ---

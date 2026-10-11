@@ -171,11 +171,9 @@ function loadSettingsToUI() {
             document.getElementById('nodeScaleSlider').value = DB.settings.nodeSize;
             setNodeScale(DB.settings.nodeSize);
         }
-        if(DB.settings.showMaxCap) document.getElementById('showMaxCap').checked = DB.settings.showMaxCap;
-        if(DB.settings.showFuelFert) document.getElementById('showFuelFert').checked = DB.settings.showFuelFert;
-        if(DB.settings.showRawMachineCount) document.getElementById('showRawMachineCount').checked = DB.settings.showRawMachineCount;
-        if(DB.settings.showHeatFert) document.getElementById('showHeatFert').checked = DB.settings.showHeatFert;
-        if(DB.settings.showBeltCount) document.getElementById('showBeltCount').checked = DB.settings.showBeltCount;
+        ['showMaxCap', 'showFuelFert', 'showRawMachineCount', 'showHeatFert', 'showBeltCount'].forEach(key => {
+            if (DB.settings[key] !== undefined) document.getElementById(key).checked = Boolean(DB.settings[key]);
+        });
 
         // --- Restore Calculator target/mode state ---
         if (DB.settings.targetItem) {
@@ -188,20 +186,16 @@ function loadSettingsToUI() {
         if (DB.settings.targetMachineCount !== undefined) {
             document.getElementById('targetMachine').value = DB.settings.targetMachineCount;
         }
-        if (DB.settings.machineModeToggle) {
-            document.getElementById('machineModeToggle').checked = true;
+        if (DB.settings.machineModeToggle !== undefined) {
+            document.getElementById('machineModeToggle').checked = Boolean(DB.settings.machineModeToggle);
             toggleControlMode(false); // 套用禁用/啟用對應輸入框的 UI 效果
         }
-        if (DB.settings.selfFuel) {
-            const btn = document.getElementById('btnSelfFuel');
-            btn.classList.remove('btn-inactive-red');
-            btn.classList.add('btn-active-green');
-        }
-        if (DB.settings.selfFert) {
-            const btn = document.getElementById('btnSelfFert');
-            btn.classList.remove('btn-inactive-red');
-            btn.classList.add('btn-active-green');
-        }
+        [['btnSelfFuel', 'selfFuel'], ['btnSelfFert', 'selfFert']].forEach(([buttonId, settingKey]) => {
+            const button = document.getElementById(buttonId);
+            const enabled = Boolean(DB.settings[settingKey]);
+            button.classList.toggle('btn-active-green', enabled);
+            button.classList.toggle('btn-inactive-red', !enabled);
+        });
     }
 }
 

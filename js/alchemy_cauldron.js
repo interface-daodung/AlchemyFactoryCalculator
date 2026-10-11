@@ -3,6 +3,13 @@
    ========================================================================== */
 
 const CAULDRON_STORAGE_KEY = "alchemy_cauldron_v1";
+const GENTIAN_MIXTURE_ITEM = "Gentian Mixture";
+const GENTIAN_MIXTURE_ITEM_ID = 9001;
+
+function getGentianMixtureCurrentName() {
+    return Object.keys(DB.items).find(name => DB.items[name]?.id === GENTIAN_MIXTURE_ITEM_ID) ||
+        getCurrentItemName(GENTIAN_MIXTURE_ITEM);
+}
 
 let cauldronState = {
     activeType: 0, // 0:煉金鍋 1:高級煉金鍋
@@ -38,7 +45,8 @@ let _cauldronCostCache = new Map();   // item name -> number | null
 
 function isVaildCandidate(itemName) {
     const item = DB.items[itemName];
-    return item && item.cauldronCost !== undefined && !(item.liquid) && !(item.virtual);
+    return item && item.cauldronCost !== undefined && !(item.liquid) &&
+        (!(item.virtual) || item.id === GENTIAN_MIXTURE_ITEM_ID);
 }
 
 // 初始化：在 alchemy_ui.js 的 init() 之后调用
@@ -78,6 +86,23 @@ function loadCauldronSettings() {
         cauldronState.profiles[2].candidates = Array.from(getPresetCandidates('Gold'));
         cauldronState.showEstCost = true;
         cauldronState.orderByEstCost = true;
+        cauldronState.gentianMixtureCandidateMigratedV2 = true;
+    }
+    // Add the virtual substitute to existing profiles once; users can still remove it.
+    if (!cauldronState.gentianMixtureCandidateMigratedV2) {
+        const mixtureName = getGentianMixtureCurrentName();
+        const gentianName = getCurrentItemName('Gentian');
+        const nectarName = getCurrentItemName('Gentian Nectar');
+        (cauldronState.profiles || []).forEach(profile => {
+            const candidates = profile.candidates || [];
+            const hasGentian = candidates.includes('Gentian') || candidates.includes(gentianName);
+            const hasNectar = candidates.includes('Gentian Nectar') || candidates.includes(nectarName);
+            if (hasGentian && hasNectar && isVaildCandidate(mixtureName) && !candidates.includes(mixtureName)) {
+                candidates.push(mixtureName);
+            }
+            profile.candidates = candidates;
+        });
+        cauldronState.gentianMixtureCandidateMigratedV2 = true;
     }
     if (!(cauldronState.heatPerCopper > 0)) cauldronState.heatPerCopper = 20;
     if (!(cauldronState.nutrPerCopper > 0)) cauldronState.nutrPerCopper = 12;
@@ -1928,11 +1953,10 @@ function _renderCauldronRecipeModal() {
         slotsHtml += `
             <div style="display:flex; flex-direction:column; align-items:center; gap:4px; ${hidden ? 'visibility:hidden;' : ''}">
                 <!-- picker 按鈕 -->
-                <button class="cauldron-slot-btn ${name ? 'active' : ''}"
+                <button class="cauldron-slot-btn cauldron-modal-slot-btn ${name ? 'active' : ''}"
                     onclick="_pickCauldronModalSlot(${i})"
                     style="display:flex; align-items:center; gap:4px; padding:5px 8px;
-                           background:#1a1a1a; border:1px solid ${name ? '#557' : '#444'};
-                           border-radius:4px; cursor:pointer; min-width:100px; color:inherit; font-size:0.85em;">
+                           border-radius:4px; cursor:pointer; min-width:100px; font-size:0.85em;">
                     ${def
                         ? `<img src="img/item${def.id ?? 0}.png" width="18" height="18">`
                         : '<span style="opacity:0.4; font-size:1.1em;">＋</span>'}
@@ -1957,26 +1981,24 @@ function _renderCauldronRecipeModal() {
     if (allFilled && currentOutput) {
         const outDef = DB.items[currentOutput] || {};
         resultHtml = `
-            <div style="padding:5px 8px; border-radius:4px; font-size:0.85em; display:flex; align-items:center; gap:6px;
-                        background:${isMatch ? 'rgba(0,200,100,0.1)' : 'rgba(200,50,50,0.1)'};
-                        border:1px solid ${isMatch ? 'var(--success,#4c4)' : 'var(--danger,#c44)'};">
+            <div class="cauldron-modal-result ${isMatch ? 'is-match' : 'is-mismatch'}" style="padding:5px 8px; border-radius:4px; font-size:0.85em; display:flex; align-items:center; gap:6px;">
                 <img src="img/item${outDef.id ?? 0}.png" width="20" height="20">
                 ${isMatch
-                    ? `<span style="color:var(--success,#4c4);">✔ ${t('Current Product')}：${currentOutput}</span>`
-                    : `<span style="color:var(--danger,#c44);">✘ ${t('Current Product')}：${currentOutput}</span>`}
+                    ? `<span class="cauldron-modal-status">✔ ${t('Current Product')}：${currentOutput}</span>`
+                    : `<span class="cauldron-modal-status">✘ ${t('Current Product')}：${currentOutput}</span>`}
             </div>`;
     }
 
     // ── 目標 cauldronTarget 及上下界 ──
     let boundsHtml = `
-            <div style="font-size:0.8em; color:#aaa; display:flex; align-items:center; gap:8px;">
+            <div class="cauldron-modal-target" style="font-size:0.8em; display:flex; align-items:center; gap:8px;">
                 <img src="img/item${DB.items[targetItem]?.id ?? 0}.png" width="20" height="20">
-                <span><strong style="color:#ddd;">${targetItem}</strong></span>
-                <span>${t('Target Value')} = <strong style="color:#ddd;">${bounds.self}</strong></span>`;
+                <span><strong>${targetItem}</strong></span>
+                <span>${t('Target Value')} = <strong>${bounds.self}</strong></span>`;
     if (bounds && slotCount === 3) {
         const lowerStr = bounds.lower !== null ? Number(bounds.lower.toFixed(2)) : '-∞';
         const upperStr = bounds.upper !== null ? Number(bounds.upper.toFixed(2)) : '+∞';
-        boundsHtml += `<span style="color:#888;">${t('Valid Range')}：[${lowerStr}, ${upperStr}]</span>`;
+        boundsHtml += `<span class="cauldron-modal-range">${t('Valid Range')}：[${lowerStr}, ${upperStr}]</span>`;
     }
     boundsHtml += `</div>`;
 
@@ -1984,13 +2006,12 @@ function _renderCauldronRecipeModal() {
     let tInfoHtml = '';
     if (bounds) {
         if (!allFilled) {
-            tInfoHtml = `---`;
+            tInfoHtml = `<div class="cauldron-modal-empty-value">---</div>`;
         } else {
             const tDisplay = Number(T.toFixed(3));
             const inBounds =
                 (bounds.lower === null || T >= bounds.lower) &&
                 (bounds.upper === null || T <= bounds.upper);
-            const color = inBounds ? 'var(--success,#4c4)' : 'var(--danger,#c44)';
 
             const dLower = bounds.lower !== null && slotCount === 3
                 ? Number((T - bounds.lower).toFixed(3))
@@ -2000,15 +2021,15 @@ function _renderCauldronRecipeModal() {
                 : null;
 
             const dLowerStr = dLower !== null
-                ? `${t('Distance to lower bound')}：<span style="color:${dLower >= 0 ? '#4c4' : '#c44'};">${dLower >= 0 ? '+' : ''}${dLower}</span>`
+                ? `${t('Distance to lower bound')}：<span class="cauldron-modal-distance ${dLower >= 0 ? 'in-range' : 'out-of-range'}">${dLower >= 0 ? '+' : ''}${dLower}</span>`
                 : '';
             const dUpperStr = dUpper !== null
-                ? `${t('Distance to upper bound')}：<span style="color:${dUpper >= 0 ? '#4c4' : '#c44'};">${dUpper >= 0 ? '+' : ''}${dUpper}</span>`
+                ? `${t('Distance to upper bound')}：<span class="cauldron-modal-distance ${dUpper >= 0 ? 'in-range' : 'out-of-range'}">${dUpper >= 0 ? '+' : ''}${dUpper}</span>`
                 : '';
 
             tInfoHtml = `
-                <div style="font-size:0.8em; display:flex; align-items:center; gap:12px;">
-                    <span>${t('Current Value')} = <strong style="color:${color};">${tDisplay}</strong></span>
+                <div class="cauldron-modal-current-value ${inBounds ? 'in-range' : 'out-of-range'}" style="font-size:0.8em; display:flex; align-items:center; gap:12px;">
+                    <span>${t('Current Value')} = <strong>${tDisplay}</strong></span>
                     ${dLowerStr ? `<span>${dLowerStr}</span>` : ''}
                     ${dUpperStr ? `<span>${dUpperStr}</span>` : ''}
                 </div>`;
@@ -2018,18 +2039,16 @@ function _renderCauldronRecipeModal() {
     // ── 底部按鈕列 ──
     const bottomHtml = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">            
-            <span style="font-size:0.8em; color:#888;"><img src="img/item${DB.items[currentOutput]?.id ?? 0}.png" width="18" height="18"> ${t('Current Product')} ${t('Saved Recipes')} : ${favCount}</span>
+            <span class="cauldron-modal-saved-count" style="font-size:0.8em;"><img src="img/item${DB.items[currentOutput]?.id ?? 0}.png" width="18" height="18"> ${t('Current Product')} ${t('Saved Recipes')} : ${favCount}</span>
             <div style="display:flex; gap:6px;">
-                <button class="swap-btn"
+                <button class="swap-btn cauldron-modal-favorite"
                     title="${t('Toggle favorite')}"
                     style="width:auto; padding:3px 10px; border-radius:4px; font-size:1.1em; ${allFilled ? '' : 'opacity:0.4; cursor:not-allowed;'}"
                     onclick="_toggleCauldronModalFav()" ${allFilled ? '' : 'disabled'}>
                     ${isCurrentFav ? '★' : '☆'}
                 </button>
-                <button class="swap-btn"
+                <button class="swap-btn cauldron-modal-apply ${isMatch ? 'is-match' : ''}"
                     style="width:auto; padding:3px 12px; border-radius:4px;
-                           background:${isMatch ? 'rgba(0,160,80,0.3)' : '#222'};
-                           border-color:${isMatch ? 'var(--success,#4c4)' : '#555'};
                            ${isMatch ? '' : 'opacity:0.4; cursor:not-allowed;'}"
                     onclick="_applyCauldronModalRecipe()" ${isMatch ? '' : 'disabled'}>
                     ${t('Apply')}
