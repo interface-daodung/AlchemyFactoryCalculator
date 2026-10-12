@@ -419,6 +419,8 @@ input:checked + .slider-switch:before { transform: translateX(16px); }
     SECTION: CSS - CONSTRUCTION LIST
     ========================================================================== */
 .build-list { list-style: none; padding: 0; margin: 0; }
+.build-tier-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 8px; margin-bottom: 6px; border-bottom: 1px solid #555; color: #aaa; }
+.build-tier-row strong { color: var(--accent); }
 .build-group { margin-bottom: 2px; }
 .build-header { 
     display: flex; justify-content: space-between; align-items: center; 

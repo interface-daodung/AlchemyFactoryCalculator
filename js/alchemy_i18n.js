@@ -261,6 +261,7 @@ window.ALCHEMY_I18N = {
 
         // --- 4. Construction List ---
         "Construction List": "Danh Sách Xây Dựng",
+        "Minimum Alchemy Tier": "Cấp giả kim tối thiểu",
         "Machine Size": "Kích Thước Máy",
         "Machine Area": "Diện Tích Máy",
         "Sum Area": "Tổng Diện Tích",

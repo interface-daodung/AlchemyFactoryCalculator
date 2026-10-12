@@ -141,7 +141,7 @@ Phía trên cây sản xuất hiển thị bốn khối dữ liệu:
 
 ### Danh Sách Xây Dựng
 
-Bảng bên phải liệt kê tất cả loại máy cần thiết cho kế hoạch hiện tại cùng số lượng. Nhấp vào tên máy để mở rộng, xem **tổng nguyên liệu** cần thiết để xây dựng các máy đó. Khối **Tổng nguyên liệu cần thiết** ở dưới cùng còn ước tính **số ô kho** cần thiết dựa trên giới hạn đống.
+Bảng bên phải hiển thị **cấp giả kim tối thiểu** của kế hoạch (tier cao nhất trong các vật phẩm và thiết bị tham gia sản xuất), sau đó liệt kê tất cả loại máy cần thiết cùng số lượng. Nhấp vào tên máy để mở rộng, xem **tổng nguyên liệu** cần thiết để xây dựng các máy đó. Khối **Tổng nguyên liệu cần thiết** ở dưới cùng còn ước tính **số ô kho** cần thiết dựa trên giới hạn đống.
 
 ### Gửi Đến Trình Lập Kế Hoạch
 

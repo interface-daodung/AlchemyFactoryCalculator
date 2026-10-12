@@ -493,7 +493,8 @@ function renderCalculationResult(params, result) {
         result.construction.minCounts,
         result.construction.furnaces,
         result.construction.extraBuildCosts,
-        params.selectedHeatingDevice
+        params.selectedHeatingDevice,
+        result.treeRoots
     );
 
     // 新增：計算 fuel/fert 換算價值
@@ -918,10 +919,38 @@ function updateEquilibriumWarning(equilibriumWarning) {
 /* ==========================================================================
    SECTION: JS - DOM RENDERING
    ========================================================================== */
-function updateConstructionList(maxCounts, minCounts, furnaces, extraBuildCosts, selectedHeatingDevice) {
+function updateConstructionList(maxCounts, minCounts, furnaces, extraBuildCosts, selectedHeatingDevice, treeRoots = []) {
     const buildList = document.getElementById('construction-list'); buildList.innerHTML = '';
     const totalMatsContainer = document.getElementById('total-mats-container'); totalMatsContainer.innerHTML = '';
     const isMaxMode = false;
+
+    // Minimum alchemy tier is the highest tier among every item and machine
+    // involved in the production trees, including the selected heating device.
+    let minimumAlchemyTier = 0;
+    const visitedNodes = new Set();
+    function includeTier(definition) {
+        if (Number.isFinite(Number(definition?.tier))) {
+            minimumAlchemyTier = Math.max(minimumAlchemyTier, Number(definition.tier));
+        }
+    }
+    function includeProductionNode(node) {
+        if (!node || visitedNodes.has(node)) return;
+        visitedNodes.add(node);
+        includeTier(DB.items[node.item]);
+        includeTier(DB.machines[node.machine]);
+        (node.tags?.byproducts || []).forEach(entry => includeTier(DB.items[entry.item]));
+        (node.recipe?.inputs ? Object.keys(node.recipe.inputs) : []).forEach(item => includeTier(DB.items[item]));
+        (node.recipe?.outputs ? Object.keys(node.recipe.outputs) : []).forEach(item => includeTier(DB.items[item]));
+        (node.children || []).forEach(includeProductionNode);
+    }
+    (treeRoots || []).forEach(entry => includeProductionNode(entry.root));
+    Object.keys(maxCounts || {}).forEach(machine => includeTier(DB.machines[machine]));
+    if (furnaces > 0) includeTier(DB.machines[selectedHeatingDevice || 'Stone Furnace']);
+
+    const tierRow = document.createElement('li');
+    tierRow.className = 'build-tier-row';
+    tierRow.innerHTML = `<span>${t('Minimum Alchemy Tier')}</span><strong>${minimumAlchemyTier || '—'}</strong>`;
+    buildList.appendChild(tierRow);
 
     const sortedMachines = Object.keys(maxCounts).sort();
     let totalConstructionMaterials = {};
