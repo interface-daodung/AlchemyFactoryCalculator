@@ -285,17 +285,80 @@ function managePlannerDeleteSelected() {
     renderPlannerManageList();
 }
 
-/** 將選中方案匯出成單一 .json 檔 (含 name + data，方便匯入時直接還原名稱) */
+function _plannerSvgXml(value) {
+    return String(value ?? '').replace(/[&<>\"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&apos;' })[char]);
+}
+
+function _plannerPlanPreviewSvg(plan) {
+    const nodes = Object.values(plan.data?.nodes || {});
+    const edges = Object.values(plan.data?.edges || {});
+    const cardWidth = 220;
+    const cardHeight = 116;
+    const pad = 36;
+    const positions = new Map(nodes.map(node => [node.id, {
+        x: Number(node.x) || 0,
+        y: Number(node.y) || 0
+    }]));
+    const minX = nodes.length ? Math.min(...nodes.map(node => positions.get(node.id).x)) : 0;
+    const minY = nodes.length ? Math.min(...nodes.map(node => positions.get(node.id).y)) : 0;
+    const maxX = nodes.length ? Math.max(...nodes.map(node => positions.get(node.id).x + cardWidth)) : cardWidth;
+    const maxY = nodes.length ? Math.max(...nodes.map(node => positions.get(node.id).y + cardHeight)) : cardHeight;
+    const width = Math.max(360, maxX - minX + pad * 2);
+    const height = Math.max(210, maxY - minY + pad * 2 + 32);
+    const point = node => ({ x: positions.get(node.id).x - minX + pad, y: positions.get(node.id).y - minY + pad + 32 });
+    const edgeMarkup = edges.map(edge => {
+        const from = positions.has(edge.fromNode) && nodes.find(node => node.id === edge.fromNode);
+        const to = positions.has(edge.toNode) && nodes.find(node => node.id === edge.toNode);
+        if (!from || !to) return '';
+        const a = point(from), b = point(to);
+        return `<path d="M ${a.x + cardWidth} ${a.y + cardHeight / 2} C ${a.x + cardWidth + 36} ${a.y + cardHeight / 2}, ${b.x - 36} ${b.y + cardHeight / 2}, ${b.x} ${b.y + cardHeight / 2}" fill="none" stroke="#8bd5ff" stroke-width="3" marker-end="url(#arrow)"/>`;
+    }).join('');
+    const nodeMarkup = nodes.map(node => {
+        const { x, y } = point(node);
+        const moduleName = node.moduleId ? plannerLibrary.plans[node.moduleId]?.name : '';
+        const recipeOutput = node.recipeId ? plannerMainOutput(node.recipeId) : '';
+        const label = node.kind === 'note' ? (node.text || 'Note')
+            : node.kind === 'portal' ? (node.portalItem || 'Portal')
+            : node.moduleId ? (moduleName || 'Module')
+            : node.recipeId ? (t('Production', 'ui')) : 'Node';
+        const detail = recipeOutput || (node.recipeId ? String(node.recipeId) : '');
+        const iconId = recipeOutput ? DB.items[recipeOutput]?.id : null;
+        const icon = iconId != null ? globalThis.ALCHEMY_ITEM_IMAGE_BASE64?.[iconId] : '';
+        const iconMarkup = icon
+            ? `<image href="${_plannerSvgXml(icon)}" x="${x + 16}" y="${y + 58}" width="34" height="34" preserveAspectRatio="xMidYMid meet" style="filter:brightness(1.2) saturate(1.1)"/>` : '';
+        const detailX = icon ? x + 60 : x + 16;
+        const title = String(label).length > 24 ? `${String(label).slice(0, 22)}…` : label;
+        const subtitle = String(detail).length > 22 ? `${String(detail).slice(0, 20)}…` : detail;
+        return `<g><rect x="${x}" y="${y}" width="${cardWidth}" height="${cardHeight}" rx="12" fill="#303947" stroke="#7b8da3" stroke-width="2"/>` +
+            `<text x="${x + 16}" y="${y + 30}" fill="#ffffff" font-size="16" font-weight="700">${_plannerSvgXml(title)}</text>` +
+            `${iconMarkup}<text x="${detailX}" y="${y + 79}" fill="#f1f5f9" font-size="13">${_plannerSvgXml(subtitle)}</text>` +
+            `<text x="${detailX}" y="${y + 99}" fill="#cbd5e1" font-size="12">${_plannerSvgXml(node.machineCount ? `${node.machineCount} machine(s)` : node.kind || 'Plan node')}</text></g>`;
+    }).join('');
+    return { width, height, markup: `<rect width="100%" height="100%" rx="16" fill="#20252d"/>` +
+        `<text x="${pad}" y="26" fill="#eaf2ff" font-size="17" font-weight="700">${_plannerSvgXml(plan.name)}</text>` +
+        `<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8bd5ff"/></marker></defs>${edgeMarkup}${nodeMarkup}` };
+}
+
+/** Export the selected planner plan as an SVG with its restorable data in metadata. */
 function managePlannerExportSelected() {
     const id = _plannerManageSelectedId;
     if (!id) return;
     const plan = plannerLibrary.plans[id];
     const exportObj = { name: plan.name, data: plan.data };
-    const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: "application/json" });
+    const bytes = new TextEncoder().encode(JSON.stringify(exportObj));
+    let binary = '';
+    for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+        binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+    }
+    const metadata = btoa(binary);
+    const preview = _plannerPlanPreviewSvg(plan);
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${preview.width}" height="${preview.height}" viewBox="0 0 ${preview.width} ${preview.height}"><metadata>${metadata}</metadata>${preview.markup}</svg>`;
+    const blob = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `planner_${plan.name.replace(/[^\w\-]+/g, '_')}.json`;
+    const safeName = plan.name.replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '') || 'plan';
+    a.download = `planner_${safeName}_${new Date().toISOString().replace(/[:.]/g, '-')}.svg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -347,14 +410,24 @@ function managePlannerCreateNew() {
 function managePlannerImport() {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = '.json';
+    input.accept = '.json,.svg,image/svg+xml';
     input.onchange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (readerEvent) => {
             try {
-                const parsed = JSON.parse(readerEvent.target.result);
+                let importText = readerEvent.target.result;
+                if (/\.svg$/i.test(file.name) || file.type === 'image/svg+xml') {
+                    const svgDocument = new DOMParser().parseFromString(importText, 'image/svg+xml');
+                    if (svgDocument.querySelector('parsererror')) throw new Error('Invalid SVG file.');
+                    const encoded = svgDocument.querySelector('metadata')?.textContent?.trim();
+                    if (!encoded) throw new Error('SVG plan metadata is missing.');
+                    const binary = atob(encoded);
+                    const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+                    importText = new TextDecoder().decode(bytes);
+                }
+                const parsed = JSON.parse(importText);
                 if (!parsed || typeof parsed !== 'object' || !parsed.data || !parsed.data.nodes) {
                     throw new Error("Invalid plan file format.");
                 }

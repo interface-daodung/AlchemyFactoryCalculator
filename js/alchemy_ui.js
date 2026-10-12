@@ -437,7 +437,7 @@ function applyRecursivePlanState(state = {}) {
     persist();
 }
 
-function saveMultiTargets(e) {
+async function saveMultiTargets(e) {
     const targets = [];
     const rows = document.querySelectorAll('.multi-target-row');    
     rows.forEach(row => {
@@ -452,16 +452,33 @@ function saveMultiTargets(e) {
         return;
     }
     const payload = { format: 'AFC_MULTI_TARGETS', version: 2, targets, ...captureRecursivePlanState() };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `alchemy_list_${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    URL.revokeObjectURL(url);
-    if(e?.currentTarget) flashButton(e.currentTarget);
+    try {
+        const bytes = new TextEncoder().encode(JSON.stringify(payload));
+        let binary = '';
+        for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+            binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+        }
+        const encodedList = 'AFCMULTI2:BASE64:' + btoa(binary);
+        const preview = await getSummaryLineSvgMarkup();
+        const svg = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+            `<svg xmlns="http://www.w3.org/2000/svg" width="${preview.width}" height="${preview.height}" viewBox="0 0 ${preview.width} ${preview.height}">` +
+            `<metadata>${escapeXml(encodedList)}</metadata>${preview.markup}</svg>`;
+        const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        const targetName = targets.map(target => target.item).filter(Boolean).join('_') || 'untitled';
+        const safeName = targetName.replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '').slice(0, 80) || 'untitled';
+        anchor.download = `alchemy_list_${safeName}_${getProductionPlanTimestamp()}.svg`;
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        URL.revokeObjectURL(url);
+        if (e?.currentTarget) flashButton(e.currentTarget);
+    } catch (error) {
+        console.error('Failed to save multi-target list.', error);
+        alert(`${t('Failed to save multi-target list.', 'ui')}\n${error.message || error}`);
+    }
 }
 
 function openMultiTargetsFilePicker() {
@@ -473,7 +490,18 @@ async function loadMultiTargetsFile(input) {
     const file = input?.files?.[0];
     if (!file) return;
     try {
-        const parsed = JSON.parse(await file.text());
+        let fileContents = await file.text();
+        if (/\.svg$/i.test(file.name) || file.type === 'image/svg+xml') {
+            const svgDocument = new DOMParser().parseFromString(fileContents, 'image/svg+xml');
+            if (svgDocument.querySelector('parsererror')) throw new Error('Invalid SVG list file.');
+            const metadata = svgDocument.querySelector('metadata')?.textContent?.trim() || '';
+            const marker = 'AFCMULTI2:BASE64:';
+            if (!metadata.startsWith(marker)) throw new Error('SVG list metadata is missing or unsupported.');
+            const binary = atob(metadata.slice(marker.length));
+            const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+            fileContents = new TextDecoder().decode(bytes);
+        }
+        const parsed = JSON.parse(fileContents);
         const targets = Array.isArray(parsed) ? parsed : parsed?.targets;
         if (!Array.isArray(targets) || targets.length === 0 || targets.some(target =>
             !target || typeof target.item !== 'string' || !target.item || !Number.isFinite(Number(target.rate)))) {
@@ -508,7 +536,7 @@ function renderMultiTargetsFromFile(targets) {
 }
 
 // Keep restoring the browser's last working targets when entering multi-target mode.
-// The explicit Save/Load List buttons now use portable text files.
+// Save List exports a portable SVG; Load List also keeps accepting legacy text files.
 function loadMultiTargets() {
     const targets = DB.settings.multiTargets;
     if (!Array.isArray(targets) || targets.length === 0) return;
@@ -699,6 +727,132 @@ function getProductionPlanDisplayName(payload) {
     return names.join(' + ') || t('Untitled plan', 'ui');
 }
 
+function getProductionPlanTimestamp(date = new Date()) {
+    return date.toISOString().replace(/[:.]/g, '-');
+}
+
+async function encodeProductionPlan(payload) {
+    if (typeof CompressionStream !== 'function') throw new Error('PLAN_COMPRESSION_UNSUPPORTED');
+    const jsonBytes = new TextEncoder().encode(JSON.stringify(payload));
+    const compressedStream = new Blob([jsonBytes]).stream().pipeThrough(new CompressionStream('gzip'));
+    const compressedBytes = new Uint8Array(await new Response(compressedStream).arrayBuffer());
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let offset = 0; offset < compressedBytes.length; offset += chunkSize) {
+        binary += String.fromCharCode(...compressedBytes.subarray(offset, offset + chunkSize));
+    }
+    return 'AFCPLAN1:GZIP:' + btoa(binary);
+}
+
+function escapeXml(value) {
+    return String(value).replace(/[&<>\"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&apos;' })[char]);
+}
+
+async function embedPlanPreviewImage(image, src) {
+    if (src.startsWith('data:image/')) return src;
+    const itemImageMatch = src.match(/(?:^|\/)item(\d+)\.png(?:[?#].*)?$/i);
+    const bundledImage = itemImageMatch && globalThis.ALCHEMY_ITEM_IMAGE_BASE64?.[itemImageMatch[1]];
+    if (bundledImage) return bundledImage;
+    try {
+        const response = await fetch(new URL(src, document.baseURI));
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const blob = await response.blob();
+        return await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(reader.error || new Error('Could not read image data.'));
+            reader.readAsDataURL(blob);
+        });
+    } catch (fetchError) {
+        throw new Error(`Could not embed image ${src}: ${fetchError.message || fetchError}`);
+    }
+}
+
+async function getSummaryLineSvgMarkup() {
+    const source = document.getElementById('summary-line');
+    const groups = { inputs: [], outputs: [] };
+    let isOutput = false;
+    for (const child of source.childNodes) {
+        if (child.nodeType === Node.ELEMENT_NODE && child.matches('.qty')) {
+            const image = child.querySelector('img');
+            if (!image) continue;
+            const src = image.getAttribute('src');
+            if (!src) throw new Error('Plan preview item is missing its image.');
+            const imageData = await embedPlanPreviewImage(image, src);
+            if (!String(imageData).startsWith('data:image/')) throw new Error(`Could not embed plan preview image: ${src}`);
+            groups[isOutput ? 'outputs' : 'inputs'].push({
+                imageData,
+                quantity: child.childNodes.length ? child.childNodes[0].textContent.trim() : '',
+                name: image.title || ''
+            });
+        } else if (child.nodeType === Node.ELEMENT_NODE && child.textContent.includes('➔')) {
+            isOutput = true;
+        }
+    }
+
+    const cardWidth = 180;
+    const cardHeight = 118;
+    const gap = 12;
+    const outerPad = 18;
+    const sectionHeight = 28;
+    const arrowHeight = 30;
+    const cols = 2;
+    const rowsFor = items => Math.ceil(items.length / cols);
+    const cardsMarkup = (items, top) => items.map((item, index) => {
+        const x = outerPad + (index % cols) * (cardWidth + gap);
+        const y = top + Math.floor(index / cols) * (cardHeight + gap);
+        const displayName = item.name.length > 22 ? `${item.name.slice(0, 20)}…` : item.name;
+        return `<g><rect x="${x}" y="${y}" width="${cardWidth}" height="${cardHeight}" rx="10" fill="#222831" stroke="#414a56"/>` +
+            `<image href="${escapeXml(item.imageData)}" x="${x + 68}" y="${y + 8}" width="44" height="44" preserveAspectRatio="xMidYMid meet" style="filter:brightness(1.2) saturate(1.1)"/>` +
+            `<text x="${x + cardWidth / 2}" y="${y + 76}" fill="#ffffff" font-size="20" font-weight="700" text-anchor="middle">${escapeXml(item.quantity)}</text>` +
+            `<text x="${x + cardWidth / 2}" y="${y + 101}" fill="#f1f5f9" font-size="12" text-anchor="middle">${escapeXml(displayName)}</text></g>`;
+    }).join('');
+    const section = (title, items, top) => {
+        const rows = Math.max(1, rowsFor(items));
+        const cardsTop = top + sectionHeight;
+        const cards = cardsMarkup(items, cardsTop);
+        const height = sectionHeight + rows * cardHeight + Math.max(0, rows - 1) * gap;
+        return { markup: `<text x="${outerPad}" y="${top + 19}" fill="#dbeafe" font-size="13" font-weight="700" letter-spacing="1">${title}</text>${cards}`, height };
+    };
+    const inputs = section('INPUTS', groups.inputs, outerPad);
+    const arrowTop = outerPad + inputs.height + 5;
+    const outputsTop = arrowTop + arrowHeight;
+    const outputs = section('OUTPUTS', groups.outputs, outputsTop);
+    const width = outerPad * 2 + cols * cardWidth + (cols - 1) * gap;
+    const height = outputsTop + outputs.height + outerPad;
+    const markup = `<rect width="100%" height="100%" rx="14" fill="#20252d"/>` +
+        `${inputs.markup}<text x="${width / 2}" y="${arrowTop + 23}" fill="#7dd3fc" font-size="24" text-anchor="middle">➔</text>${outputs.markup}`;
+    return { markup, width, height };
+}
+
+async function downloadProductionPlanSvg(payload, encodedPlan, baseName) {
+    const preview = await getSummaryLineSvgMarkup();
+    const svg = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${preview.width}" height="${preview.height}" viewBox="0 0 ${preview.width} ${preview.height}">` +
+        `<metadata>${escapeXml(encodedPlan)}</metadata>${preview.markup}</svg>`;
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${baseName}.svg`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+}
+
+async function decodeProductionPlanFile(file) {
+    if (/\.svg$/i.test(file.name) || file.type === 'image/svg+xml') {
+        const svgText = await file.text();
+        const documentSvg = new DOMParser().parseFromString(svgText, 'image/svg+xml');
+        if (documentSvg.querySelector('parsererror')) throw new Error('Invalid SVG plan file.');
+        const encodedPlan = documentSvg.querySelector('metadata')?.textContent?.trim();
+        if (!encodedPlan) throw new Error('SVG plan metadata is missing.');
+        return decodeProductionPlanText(encodedPlan);
+    }
+    return decodeProductionPlanText(await file.text());
+}
+
 function readRecentProductionPlans() {
     try {
         const parsed = JSON.parse(localStorage.getItem(RECENT_PRODUCTION_PLANS_KEY) || '[]');
@@ -710,7 +864,7 @@ function readRecentProductionPlans() {
     }
 }
 
-function cacheRecentProductionPlan(payload) {
+function cacheRecentProductionPlan(payload, displayName = '') {
     const recent = readRecentProductionPlans();
     // Identical snapshots are moved to the top; different rates/settings for the
     // same target remain separate plans and can still be switched between.
@@ -719,7 +873,7 @@ function cacheRecentProductionPlan(payload) {
     const entry = {
         id: previous?.id || `plan-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         signature,
-        name: getProductionPlanDisplayName(payload),
+        name: displayName || previous?.name || `${getProductionPlanDisplayName(payload)}_${getProductionPlanTimestamp()}`,
         usedAt: new Date().toISOString(),
         payload
     };
@@ -839,7 +993,7 @@ async function loadProductionPlanFile(input) {
     input.value = '';
     if (!file) return;
     try {
-        const payload = await decodeProductionPlanText(await file.text());
+        const payload = await decodeProductionPlanFile(file);
         applyProductionPlanPayload(payload);
         cacheRecentProductionPlan(payload);
         flashButton(document.getElementById('load-production-plan-btn'));
@@ -881,35 +1035,20 @@ async function downloadCompressedProductionPlan(button) {
         const payload = captureProductionPlanPayload();
         const currentTargets = payload.plan.targets;
 
-        const jsonBytes = new TextEncoder().encode(JSON.stringify(payload));
-        const compressedStream = new Blob([jsonBytes]).stream().pipeThrough(new CompressionStream('gzip'));
-        const compressedBytes = new Uint8Array(await new Response(compressedStream).arrayBuffer());
-
-        let binary = '';
-        const chunkSize = 0x8000;
-        for (let offset = 0; offset < compressedBytes.length; offset += chunkSize) {
-            binary += String.fromCharCode(...compressedBytes.subarray(offset, offset + chunkSize));
-        }
-        const encodedPlan = 'AFCPLAN1:GZIP:' + btoa(binary);
-
-        const targetName = currentTargets.map(target => target.item).filter(Boolean).join('_') || 'untitled';
+        const encodedPlan = await encodeProductionPlan(payload);
+        const targetName = document.getElementById('targetItemInput').value.trim() || currentTargets.map(target => target.item).filter(Boolean).join('_') || 'untitled';
         const safeName = targetName.replace(/[^\p{L}\p{N}_-]+/gu, '_').replace(/^_+|_+$/g, '').slice(0, 80) || 'untitled';
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const blob = new Blob([encodedPlan], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.download = `alchemy_plan_${safeName}_${timestamp}.txt`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
+        const timestamp = getProductionPlanTimestamp();
+        const fileBaseName = `${safeName}_${timestamp}`;
+        await downloadProductionPlanSvg(payload, encodedPlan, fileBaseName);
 
-        cacheRecentProductionPlan(payload);
+        cacheRecentProductionPlan(payload, fileBaseName);
         flashButton(button);
     } catch (error) {
         console.error('Failed to save production plan.', error);
-        alert(t('Failed to save production plan.', 'ui'));
+        alert(error.message === 'PLAN_COMPRESSION_UNSUPPORTED'
+            ? t('This browser does not support plan compression.', 'ui')
+            : `${t('Failed to save production plan.', 'ui')}\n${error.message || error}`);
     }
 }
 

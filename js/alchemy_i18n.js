@@ -305,6 +305,7 @@ window.ALCHEMY_I18N = {
         "Invalid or unsupported production plan file.": "Tệp plan sản xuất không hợp lệ hoặc không được hỗ trợ.",
         "Failed to load production plan.": "Không thể nạp plan sản xuất.",
         "Failed to save production plan.": "Không thể lưu plan sản xuất.",
+        "Failed to save multi-target list.": "Không thể lưu danh sách nhiều mục tiêu.",
         "Reset Settings": "Đặt Lại Cài Đặt",
         "Reset Recipes": "Đặt Lại Công Thức",
         "Reset Translations": "Đặt Lại Bản Dịch",

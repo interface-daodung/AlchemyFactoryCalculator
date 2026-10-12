@@ -493,10 +493,10 @@
                                     <i class="fa-solid fa-folder-open" aria-hidden="true"></i> Load Plan
                                 </button>
                                 <button id="save-production-plan-btn" class="split-btn production-plan-action-btn" type="button"
-                                    onclick="downloadCompressedProductionPlan(this)" title="Save the current plan as compressed Base64 text">
+                                    onclick="downloadCompressedProductionPlan(this)" title="Save the current plan as an SVG image">
                                     <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save Plan
                                 </button>
-                                <input id="production-plan-file-input" type="file" accept=".txt,text/plain" hidden
+                                <input id="production-plan-file-input" type="file" accept=".svg,image/svg+xml,.txt,text/plain" hidden
                                     onchange="loadProductionPlanFile(this)">
                             </div>
 
@@ -515,10 +515,10 @@
                                     <option value="">Recent plans</option>
                                 </select>
                                 <div class="split-btn-container" style="margin-top:10px;">
-                                    <button class="split-btn" onclick="saveMultiTargets(event)" title="Save list as a text file"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save List</button>
+                                    <button class="split-btn" onclick="saveMultiTargets(event)" title="Save list as an SVG image"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save List</button>
                                     <button class="split-btn" onclick="openMultiTargetsFilePicker()" title="Load list from a text file"><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Load List</button>
                                 </div>
-                                <input id="multi-target-file-input" type="file" accept=".txt,text/plain" hidden
+                                <input id="multi-target-file-input" type="file" accept=".svg,image/svg+xml,.txt,text/plain" hidden
                                     onchange="loadMultiTargetsFile(this)">
                             </div>
                             <button class="save-btn" style="margin-top:10px; background:var(--panel); border-style:dashed;"
@@ -897,6 +897,7 @@
     </main>
     
     <script src="js/alchemy_main.js"></script>
+    <script src="js/alchemy_item_images.js"></script>
     <script src="js/alchemy_ui.js"></script>
     <script src="js/alchemy_calc.js"></script>
     <script src="js/alchemy_knowledge.js"></script>
